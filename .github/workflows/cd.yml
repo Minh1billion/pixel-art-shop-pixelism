@@ -116,12 +116,13 @@ jobs:
             bash -s << 'ENDSSH'
             set -e
 
-            echo "━━━━ Pull latest code ━━━━"
-            if [ -d "${SOURCE_DIR}/.git" ]; then
-              cd "${SOURCE_DIR}" && git pull origin main
-            else
-              git clone "git@github.com:${REPO}.git" "${SOURCE_DIR}"
-            fi
+            echo "━━━━ Clean and clone fresh ━━━━"
+            # Xóa thư mục source cũ
+            rm -rf "${SOURCE_DIR}"
+            
+            # Clone lại với SSH URL
+            git clone "git@github.com:${REPO}.git" "${SOURCE_DIR}"
+            cd "${SOURCE_DIR}"
 
             echo "━━━━ Build images ━━━━"
             docker build -t "${BACKEND_IMAGE}" "${SOURCE_DIR}/${BACKEND_SUBDIR}"
