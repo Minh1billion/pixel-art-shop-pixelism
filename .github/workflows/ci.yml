@@ -1,38 +1,44 @@
-name: CI — Lint & Build
+name: CI/CD Pipeline
 
 on:
   push:
-    branches: ["**"]
+    branches:
+      - dev
+      - main
   pull_request:
-    branches: [main]
+    branches:
+      - main
 
 env:
-  BACKEND_DIR: ${{ vars.BACKEND_DIR || './shop' }}
-  FRONTEND_DIR: ${{ vars.FRONTEND_DIR || './client-shop' }}
-  NODE_VERSION: ${{ vars.NODE_VERSION || '20' }}
-  JAVA_VERSION: ${{ vars.JAVA_VERSION || '17' }}
-
-  NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1' }}
-  NEXT_PUBLIC_BACKEND_URL: ${{ vars.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080' }}
+  BACKEND_DIR: ./shop
+  FRONTEND_DIR: ./client-shop
+  NODE_VERSION: "20"
+  JAVA_VERSION: "17"
+  NEXT_PUBLIC_API_URL: http://localhost:8080/api/v1
+  NEXT_PUBLIC_BACKEND_URL: http://localhost:8080
 
 jobs:
+  # ─────────────────────────
+  # FRONTEND CI
+  # ─────────────────────────
   frontend:
     name: Frontend CI
     runs-on: ubuntu-latest
+
     defaults:
       run:
-        working-directory: ${{ vars.FRONTEND_DIR || './client-shop' }}
+        working-directory: ./client-shop
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node.js ${{ env.NODE_VERSION }}
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "npm"
-          cache-dependency-path: ${{ env.FRONTEND_DIR }}/package-lock.json
+          cache: npm
+          cache-dependency-path: ./client-shop/package-lock.json
 
       - name: Install dependencies
         run: npm ci
@@ -46,27 +52,34 @@ jobs:
           NEXT_PUBLIC_API_URL: ${{ env.NEXT_PUBLIC_API_URL }}
           NEXT_PUBLIC_BACKEND_URL: ${{ env.NEXT_PUBLIC_BACKEND_URL }}
 
+  # ─────────────────────────
+  # BACKEND CI
+  # ─────────────────────────
   backend:
     name: Backend CI
     runs-on: ubuntu-latest
+
     defaults:
       run:
-        working-directory: ${{ vars.BACKEND_DIR || './shop' }}
+        working-directory: ./shop
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Java ${{ env.JAVA_VERSION }}
+      - name: Setup Java
         uses: actions/setup-java@v4
         with:
           java-version: ${{ env.JAVA_VERSION }}
-          distribution: "temurin"
-          cache: "maven"
+          distribution: temurin
+          cache: maven
 
       - name: Build (skip tests)
         run: mvn clean install -DskipTests
 
+  # ─────────────────────────
+  # DOCKER VALIDATION
+  # ─────────────────────────
   docker-validate:
     name: Validate Dockerfiles
     runs-on: ubuntu-latest
@@ -76,13 +89,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Build backend image (dry-run)
-        run: docker build -t backend:ci-test ${{ env.BACKEND_DIR }}
+      - name: Build backend image
+        run: docker build -t backend:ci-test ./shop
 
-      - name: Build frontend image (dry-run)
+      - name: Build frontend image
         run: |
           docker build \
-            --build-arg NEXT_PUBLIC_API_URL="${{ env.NEXT_PUBLIC_API_URL }}" \
-            --build-arg NEXT_PUBLIC_BACKEND_URL="${{ env.NEXT_PUBLIC_BACKEND_URL }}" \
+            --build-arg NEXT_PUBLIC_API_URL─"${{ env.NEXT_PUBLIC_API_URL }}" \
+            --build-arg NEXT_PUBLIC_BACKEND_URL─"${{ env.NEXT_PUBLIC_BACKEND_URL }}" \
             -t frontend:ci-test \
-            ${{ env.FRONTEND_DIR }}
+            ./client-shop
