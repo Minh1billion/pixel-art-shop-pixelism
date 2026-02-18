@@ -71,8 +71,8 @@ jobs:
             "MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}" \
             "FRONTEND_REDIRECT_URI=${{ secrets.FRONTEND_REDIRECT_URI }}" \
             "OAUTH2_REDIRECT_BASE_URI=${{ secrets.OAUTH2_REDIRECT_BASE_URI }}" \
-            "NEXT_PUBLIC_API_URL=http://${{ secrets.EC2_HOST }}:${{ env.BACKEND_PORT }}/api/v1" \
-            "NEXT_PUBLIC_BACKEND_URL=http://${{ secrets.EC2_HOST }}:${{ env.BACKEND_PORT }}" \
+            "NEXT_PUBLIC_API_URL=https://${{ secrets.EC2_HOST }}/api/v1" \
+            "NEXT_PUBLIC_BACKEND_URL=https://${{ secrets.EC2_HOST }}" \
             "CLIENT_ID_GOOGLE=${{ secrets.CLIENT_ID_GOOGLE }}" \
             "CLIENT_SECRET_GOOGLE=${{ secrets.CLIENT_SECRET_GOOGLE }}" \
             "CLIENT_ID_GITHUB=${{ secrets.CLIENT_ID_GITHUB }}" \
@@ -160,11 +160,11 @@ jobs:
           sleep 30
 
           curl --fail --retry 5 --retry-delay 10 --retry-connrefused --max-time 10 \
-            http://${{ secrets.EC2_HOST }}:${{ env.BACKEND_PORT }}/actuator/health \
+            https://pixelism.duckdns.org/api/actuator/health \
             && echo "Backend OK" || { echo "ERROR: Backend health check failed"; exit 1; }
 
           curl --fail --retry 3 --retry-delay 5 --max-time 10 \
-            http://${{ secrets.EC2_HOST }}:${{ env.FRONTEND_PORT }} \
+            https://pixelism.duckdns.org \
             && echo "Frontend OK" || { echo "ERROR: Frontend health check failed"; exit 1; }
 
       # ──────────────────────────────────────
