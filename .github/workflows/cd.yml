@@ -1,0 +1,178 @@
+name: CD — Deploy to EC2
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: "Reason for manual deploy"
+        required: false
+        default: "Manual trigger"
+
+env:
+  APP_DIR: ${{ vars.APP_DIR || '/app' }}
+  APP_SOURCE_DIR: ${{ vars.APP_SOURCE_DIR || '/app/source' }}
+  BACKEND_SUBDIR: ${{ vars.BACKEND_SUBDIR || 'shop' }}
+  FRONTEND_SUBDIR: ${{ vars.FRONTEND_SUBDIR || 'client-shop' }}
+  BACKEND_IMAGE: ${{ vars.BACKEND_IMAGE || 'sprite-shop/backend:latest' }}
+  FRONTEND_IMAGE: ${{ vars.FRONTEND_IMAGE || 'sprite-shop/frontend:latest' }}
+  BACKEND_PORT: ${{ vars.BACKEND_PORT || '8080' }}
+  FRONTEND_PORT: ${{ vars.FRONTEND_PORT || '3000' }}
+
+jobs:
+  deploy:
+    name: Deploy to EC2
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      # ──────────────────────────────────────
+      # 1. Checkout
+      # ──────────────────────────────────────
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # ──────────────────────────────────────
+      # 2. Setup SSH Agent
+      # ──────────────────────────────────────
+      - name: Setup SSH Agent
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
+
+      # ──────────────────────────────────────
+      # 3. Verify EC2 connectivity
+      # ──────────────────────────────────────
+      - name: Verify EC2 connectivity & add known_hosts
+        run: |
+          nc -zv -w 10 "${{ secrets.EC2_HOST }}" 22
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          ssh-keyscan -H "${{ secrets.EC2_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null || true
+
+      # ──────────────────────────────────────
+      # 4. Create .env
+      # ──────────────────────────────────────
+      - name: Create .env
+        run: |
+          printf '%s\n' \
+            "DB_HOST=${{ secrets.DB_HOST }}" \
+            "DB_PORT=${{ secrets.DB_PORT }}" \
+            "DB_NAME=${{ secrets.DB_NAME }}" \
+            "DB_USER=${{ secrets.DB_USER }}" \
+            "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" \
+            "REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}" \
+            "JWT_SECRET=${{ secrets.JWT_SECRET }}" \
+            "JWT_ACCESS_EXPIRATION=${{ secrets.JWT_ACCESS_EXPIRATION }}" \
+            "JWT_REFRESH_EXPIRATION=${{ secrets.JWT_REFRESH_EXPIRATION }}" \
+            "OTP_EXPIRATION=${{ secrets.OTP_EXPIRATION }}" \
+            "OTP_LENGTH=${{ secrets.OTP_LENGTH }}" \
+            "MAIL_USERNAME=${{ secrets.MAIL_USERNAME }}" \
+            "MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}" \
+            "FRONTEND_REDIRECT_URI=${{ secrets.FRONTEND_REDIRECT_URI }}" \
+            "OAUTH2_REDIRECT_BASE_URI=${{ secrets.OAUTH2_REDIRECT_BASE_URI }}" \
+            "NEXT_PUBLIC_API_URL=http://${{ secrets.EC2_HOST }}:${{ env.BACKEND_PORT }}/api/v1" \
+            "NEXT_PUBLIC_BACKEND_URL=http://${{ secrets.EC2_HOST }}:${{ env.BACKEND_PORT }}" \
+            "CLIENT_ID_GOOGLE=${{ secrets.CLIENT_ID_GOOGLE }}" \
+            "CLIENT_SECRET_GOOGLE=${{ secrets.CLIENT_SECRET_GOOGLE }}" \
+            "CLIENT_ID_GITHUB=${{ secrets.CLIENT_ID_GITHUB }}" \
+            "CLIENT_SECRET_GITHUB=${{ secrets.CLIENT_SECRET_GITHUB }}" \
+            "CLOUDINARY_CLOUD_NAME=${{ secrets.CLOUDINARY_CLOUD_NAME }}" \
+            "CLOUDINARY_API_KEY=${{ secrets.CLOUDINARY_API_KEY }}" \
+            "CLOUDINARY_API_SECRET=${{ secrets.CLOUDINARY_API_SECRET }}" \
+            "COMPOSE_PROJECT_NAME=pixelism" \
+            "BACKEND_IMAGE=${{ env.BACKEND_IMAGE }}" \
+            "FRONTEND_IMAGE=${{ env.FRONTEND_IMAGE }}" \
+            "BACKEND_PORT=${{ env.BACKEND_PORT }}" \
+            "FRONTEND_PORT=${{ env.FRONTEND_PORT }}" \
+            > /tmp/app.env
+
+          echo ".env preview (values masked):"
+          sed 's/=.*/=***/' /tmp/app.env
+
+      # ──────────────────────────────────────
+      # 5. Upload files to EC2
+      # ──────────────────────────────────────
+      - name: Upload files to EC2
+        run: |
+          ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "mkdir -p ${{ env.APP_DIR }}"
+          scp /tmp/app.env ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${{ env.APP_DIR }}/.env
+          scp docker-compose.prod.yml ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${{ env.APP_DIR }}/docker-compose.yml
+
+      # ──────────────────────────────────────
+      # 6. Deploy on EC2
+      # ──────────────────────────────────────
+      - name: Deploy on EC2
+        run: |
+          ssh -o ServerAliveInterval=60 \
+            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} \
+            REPO="${{ github.repository }}" \
+            APP_DIR="${{ env.APP_DIR }}" \
+            SOURCE_DIR="${{ env.APP_SOURCE_DIR }}" \
+            BACKEND_SUBDIR="${{ env.BACKEND_SUBDIR }}" \
+            FRONTEND_SUBDIR="${{ env.FRONTEND_SUBDIR }}" \
+            BACKEND_IMAGE="${{ env.BACKEND_IMAGE }}" \
+            FRONTEND_IMAGE="${{ env.FRONTEND_IMAGE }}" \
+            bash -s << 'ENDSSH'
+            set -e
+
+            echo "━━━━ Pull latest code ━━━━"
+            if [ -d "${SOURCE_DIR}/.git" ]; then
+              cd "${SOURCE_DIR}" && git pull origin main
+            else
+              git clone "https://github.com/${REPO}.git" "${SOURCE_DIR}"
+            fi
+
+            echo "━━━━ Build images ━━━━"
+            docker build -t "${BACKEND_IMAGE}" "${SOURCE_DIR}/${BACKEND_SUBDIR}"
+
+            NEXT_PUBLIC_API_URL=$(grep '^NEXT_PUBLIC_API_URL=' "${APP_DIR}/.env" | cut -d'=' -f2)
+            NEXT_PUBLIC_BACKEND_URL=$(grep '^NEXT_PUBLIC_BACKEND_URL=' "${APP_DIR}/.env" | cut -d'=' -f2)
+
+            docker build \
+              --build-arg NEXT_PUBLIC_API_URL="${NEXT_PUBLIC_API_URL}" \
+              --build-arg NEXT_PUBLIC_BACKEND_URL="${NEXT_PUBLIC_BACKEND_URL}" \
+              -t "${FRONTEND_IMAGE}" \
+              "${SOURCE_DIR}/${FRONTEND_SUBDIR}"
+
+            echo "━━━━ Stop existing containers ━━━━"
+            cd "${APP_DIR}"
+            docker compose --env-file .env down --remove-orphans || true
+
+            echo "━━━━ Start services ━━━━"
+            cd "${APP_DIR}"
+            docker compose --env-file .env up -d redis
+            docker compose --env-file .env up -d --no-deps --force-recreate shop-backend shop-frontend
+
+            echo "━━━━ Prune old images ━━━━"
+            docker image prune -f
+
+            echo "Deploy complete."
+          ENDSSH
+
+      # ──────────────────────────────────────
+      # 7. Health Check
+      # ──────────────────────────────────────
+      - name: Health Check
+        run: |
+          echo "Waiting 30s for services to start..."
+          sleep 30
+
+          curl --fail --retry 5 --retry-delay 10 --retry-connrefused --max-time 10 \
+            http://${{ secrets.EC2_HOST }}:${{ env.BACKEND_PORT }}/actuator/health \
+            && echo "Backend OK" || { echo "ERROR: Backend health check failed"; exit 1; }
+
+          curl --fail --retry 3 --retry-delay 5 --max-time 10 \
+            http://${{ secrets.EC2_HOST }}:${{ env.FRONTEND_PORT }} \
+            && echo "Frontend OK" || { echo "ERROR: Frontend health check failed"; exit 1; }
+
+      # ──────────────────────────────────────
+      # 8. Summary
+      # ──────────────────────────────────────
+      - name: Summary
+        if: always()
+        run: |
+          echo "Status : ${{ job.status }}"
+          echo "Commit : ${{ github.sha }}"
+          echo "Actor  : ${{ github.actor }}"
+          echo "Time   : $(date '+%Y-%m-%d %H:%M:%S UTC')"

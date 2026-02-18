@@ -1,0 +1,226 @@
+package pixelart.shop.features.sprite;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import pixelart.shop.features.category.entity.Category;
+import pixelart.shop.features.category.repository.CategoryRepository;
+import pixelart.shop.features.sprite.dto.SpriteRequest;
+import pixelart.shop.features.sprite.dto.SpriteResponse;
+import pixelart.shop.features.sprite.entity.Sprite;
+import pixelart.shop.features.sprite.repository.SpriteRepository;
+import pixelart.shop.features.user.entity.User;
+import pixelart.shop.shared.exception.AppException;
+import pixelart.shop.shared.infrastructure.storage.FileStorage;
+import pixelart.shop.shared.infrastructure.storage.UploadResult;
+
+import java.io.IOException;
+import java.util.UUID;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+@Transactional
+public class SpriteServiceImpl implements SpriteService {
+
+    private final SpriteRepository spriteRepository;
+    private final CategoryRepository categoryRepository;
+    private final FileStorage fileStorage;
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<SpriteResponse> getAll(UUID categoryId, int page, int size) {
+
+        PageRequest pageable =
+                PageRequest.of(page, size, Sort.by("createdAt").descending());
+
+        if (categoryId != null) {
+            return spriteRepository
+                    .findByCategoryIdAndIsActiveTrue(categoryId, pageable)
+                    .map(SpriteResponse::from);
+        }
+
+        return spriteRepository
+                .findByIsActiveTrue(pageable)
+                .map(SpriteResponse::from);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public SpriteResponse getById(UUID id) {
+
+        return spriteRepository
+                .findByIdAndIsActiveTrue(id)
+                .map(SpriteResponse::from)
+                .orElseThrow(() ->
+                        AppException.notFound("Sprite does not exist"));
+    }
+
+    @Override
+    public SpriteResponse create(
+            SpriteRequest request,
+            MultipartFile image,
+            User currentUser
+    ) throws IOException {
+
+        Category category = categoryRepository
+                .findById(request.categoryId())
+                .orElseThrow(() ->
+                        AppException.notFound("Category does not exist"));
+
+        UploadResult uploadResult = uploadImage(image);
+
+        Sprite sprite = Sprite.builder()
+                .name(request.name())
+                .slug(generateUniqueSlug(request.name()))
+                .description(request.description())
+                .price(request.price())
+                .imageUrl(uploadResult.url())
+                .cloudinaryId(uploadResult.publicId())
+                .category(category)
+                .createdBy(currentUser)
+                .tags(request.tags())
+                .build();
+
+        return SpriteResponse.from(
+                spriteRepository.save(sprite)
+        );
+    }
+
+    @Override
+    public SpriteResponse update(
+            UUID id,
+            SpriteRequest request,
+            MultipartFile image
+    ) throws IOException {
+
+        Sprite sprite = spriteRepository
+                .findById(id)
+                .orElseThrow(() ->
+                        AppException.notFound("Sprite does not exist"));
+
+        Category category = categoryRepository
+                .findById(request.categoryId())
+                .orElseThrow(() ->
+                        AppException.notFound("Category does not exist"));
+
+        if (image != null && !image.isEmpty()) {
+
+            if (sprite.getCloudinaryId() != null) {
+                deleteImage(sprite.getCloudinaryId());
+            }
+
+            UploadResult uploadResult = uploadImage(image);
+
+            sprite.setImageUrl(uploadResult.url());
+            sprite.setCloudinaryId(uploadResult.publicId());
+        }
+
+        sprite.setName(request.name());
+        sprite.setDescription(request.description());
+        sprite.setPrice(request.price());
+        sprite.setCategory(category);
+        sprite.setTags(request.tags());
+
+        return SpriteResponse.from(
+                spriteRepository.save(sprite)
+        );
+    }
+
+    @Override
+    public void delete(UUID id) throws IOException {
+
+        Sprite sprite = spriteRepository
+                .findById(id)
+                .orElseThrow(() ->
+                        AppException.notFound("Sprite does not exist"));
+
+        sprite.setActive(false);
+        spriteRepository.save(sprite);
+
+        log.info("Soft deleted sprite: {} (Image preserved for potential recovery)", sprite.getName());
+    }
+
+    public void hardDelete(UUID id) throws IOException {
+
+        Sprite sprite = spriteRepository
+                .findById(id)
+                .orElseThrow(() ->
+                        AppException.notFound("Sprite does not exist"));
+
+        if (sprite.getCloudinaryId() != null) {
+            deleteImage(sprite.getCloudinaryId());
+        }
+
+        spriteRepository.delete(sprite);
+
+        log.info("Permanently deleted sprite: {}", sprite.getName());
+    }
+
+    public SpriteResponse restore(UUID id) {
+
+        Sprite sprite = spriteRepository
+                .findById(id)
+                .orElseThrow(() ->
+                        AppException.notFound("Sprite does not exist"));
+
+        if (sprite.isActive()) {
+            throw AppException.badRequest("Sprite is not deleted");
+        }
+
+        sprite.setActive(true);
+
+        log.info("Restored sprite: {}", sprite.getName());
+
+        return SpriteResponse.from(
+                spriteRepository.save(sprite)
+        );
+    }
+
+    private UploadResult uploadImage(MultipartFile file) throws IOException {
+
+        if (file == null || file.isEmpty()) {
+            throw AppException.badRequest("Image is required");
+        }
+
+        return fileStorage.upload(
+                file.getBytes(),
+                "sprites"
+        );
+    }
+
+    private void deleteImage(String publicId) {
+
+        try {
+            fileStorage.delete(publicId);
+        } catch (IOException e) {
+            log.warn(
+                    "Unable to delete image ({}): {}",
+                    publicId,
+                    e.getMessage()
+            );
+        }
+    }
+
+    private String generateUniqueSlug(String name) {
+
+        String baseSlug = name.toLowerCase()
+                .replaceAll("[^a-z0-9\\s-]", "")
+                .trim()
+                .replaceAll("\\s+", "-");
+
+        String slug = baseSlug;
+        int counter = 1;
+
+        while (spriteRepository.existsBySlug(slug)) {
+            slug = baseSlug + "-" + counter++;
+        }
+
+        return slug;
+    }
+}
