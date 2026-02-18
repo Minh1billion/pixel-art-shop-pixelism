@@ -11,16 +11,16 @@ public class CookieUtil {
 
         ResponseCookie accessCookie = ResponseCookie.from("access_token", accessToken)
                 .httpOnly(true)
-                .secure(false)
-                .sameSite("Lax")
+                .sameSite("None")
+                .secure(true)
                 .path("/")
                 .maxAge(15 * 60)
                 .build();
 
         ResponseCookie refreshCookie = ResponseCookie.from("refresh_token", refreshToken)
                 .httpOnly(true)
-                .secure(false)
-                .sameSite("Lax")
+                .sameSite("None")
+                .secure(true)
                 .path("/")
                 .maxAge(7 * 24 * 60 * 60)
                 .build();
@@ -33,16 +33,16 @@ public class CookieUtil {
 
         ResponseCookie accessCookie = ResponseCookie.from("access_token", "")
                 .httpOnly(true)
-                .secure(false)
-                .sameSite("Lax")
+                .sameSite("None")
+                .secure(true)
                 .path("/")
                 .maxAge(0)
                 .build();
 
         ResponseCookie refreshCookie = ResponseCookie.from("refresh_token", "")
                 .httpOnly(true)
-                .secure(false)
-                .sameSite("Lax")
+                .sameSite("None")
+                .secure(true)
                 .path("/")
                 .maxAge(0)
                 .build();
