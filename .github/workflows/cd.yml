@@ -120,7 +120,7 @@ jobs:
             if [ -d "${SOURCE_DIR}/.git" ]; then
               cd "${SOURCE_DIR}" && git pull origin main
             else
-              git clone "https://github.com/${REPO}.git" "${SOURCE_DIR}"
+              git clone "git@github.com:${REPO}.git" "${SOURCE_DIR}"
             fi
 
             echo "━━━━ Build images ━━━━"
