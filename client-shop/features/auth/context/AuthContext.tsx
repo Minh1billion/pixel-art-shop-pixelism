@@ -25,14 +25,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const initAuth = async () => {
       let currentUser = AuthService.getCurrentUser();
 
-      if (!currentUser && pathname === "/home") {
+      if (!currentUser) {
         try {
           currentUser = await AuthService.fetchCurrentUser();
-        } catch (err) {
-          console.error("Failed to fetch user");
-          router.push("/");
-          setLoading(false);
-          return;
+        } catch {
+
         }
       }
 
@@ -41,7 +38,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     initAuth();
-  }, [pathname, router]);
+  }, []);
 
   const refreshUser = () => {
     const currentUser = AuthService.getCurrentUser();
