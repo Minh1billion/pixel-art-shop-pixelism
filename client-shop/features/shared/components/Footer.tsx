@@ -1,10 +1,10 @@
 export function Footer() {
   return (
     <footer className="border-t border-green-400/10 bg-neutral-950 mt-auto">
-      <div className="max-w-7xl mx-auto px-6 py-10 grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
         <div>
           <h4 className="text-white font-bold mb-3 text-sm tracking-wider uppercase">For Developers</h4>
-          <ul className="space-y-2 text-sm text-neutral-400">
+          <ul className="space-y-2.5 text-sm text-neutral-400">
             <li><a href="#" className="hover:text-green-400 transition-colors">API Documentation</a></li>
             <li><a href="#" className="hover:text-green-400 transition-colors">Asset Integration Guide</a></li>
             <li><a href="#" className="hover:text-green-400 transition-colors">Licensing & Usage Rights</a></li>
@@ -14,7 +14,7 @@ export function Footer() {
 
         <div>
           <h4 className="text-white font-bold mb-3 text-sm tracking-wider uppercase">Resources</h4>
-          <ul className="space-y-2 text-sm text-neutral-400">
+          <ul className="space-y-2.5 text-sm text-neutral-400">
             <li><a href="#" className="hover:text-green-400 transition-colors">Sprite Format Reference</a></li>
             <li><a href="#" className="hover:text-green-400 transition-colors">Export Options</a></li>
             <li><a href="#" className="hover:text-green-400 transition-colors">Game Engine Plugins</a></li>
@@ -22,7 +22,7 @@ export function Footer() {
           </ul>
         </div>
 
-        <div>
+        <div className="sm:col-span-2 md:col-span-1">
           <h4 className="text-white font-bold mb-3 text-sm tracking-wider uppercase">Pixelism</h4>
           <p className="text-sm text-neutral-400 leading-relaxed mb-4">
             A curated pixel art marketplace built for indie developers and creative studios.
@@ -34,7 +34,7 @@ export function Footer() {
         </div>
       </div>
 
-      <div className="border-t border-neutral-800 px-6 py-4 max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2">
+      <div className="border-t border-neutral-800 px-4 sm:px-6 py-4 max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2">
         <p className="text-xs text-neutral-600">© 2025 Pixelism. All rights reserved.</p>
         <div className="flex gap-4 text-xs text-neutral-600">
           <a href="#" className="hover:text-neutral-400 transition-colors">Privacy</a>
