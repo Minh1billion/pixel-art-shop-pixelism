@@ -21,6 +21,9 @@ import pixelart.shop.shared.exception.AppException;
 import pixelart.shop.shared.util.JwtUtil;
 
 import java.time.LocalDateTime;
+import java.util.List;
+
+import static jakarta.persistence.GenerationType.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -183,17 +186,24 @@ public class AuthServiceImpl implements AuthService {
                         new AppException(HttpStatus.UNAUTHORIZED, "Invalid credentials")
                 );
 
-        boolean hasLocal = providerRepository
-                .existsByUserIdAndProvider(
-                        user.getId(),
-                        UserAuthProvider.Provider.LOCAL
-                );
+        List<UserAuthProvider> providers =
+                providerRepository.findByUserId(user.getId());
+
+        boolean hasLocal = providers.stream()
+                .anyMatch(p -> p.getProvider() == UserAuthProvider.Provider.LOCAL);
+
+        boolean hasOAuth = providers.stream()
+                .anyMatch(p -> p.getProvider() != UserAuthProvider.Provider.LOCAL);
+
+        if (!hasLocal && hasOAuth) {
+            throw new AppException(
+                    HttpStatus.BAD_REQUEST,
+                    "This account was created using social login. Please sign in with Google/GitHub or set a password."
+            );
+        }
 
         if (!hasLocal) {
-            throw new AppException(
-                    HttpStatus.UNAUTHORIZED,
-                    "Invalid credentials"
-            );
+            throw new AppException(HttpStatus.UNAUTHORIZED, "Invalid credentials");
         }
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
