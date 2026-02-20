@@ -12,11 +12,8 @@ on:
 
 env:
   APP_DIR: ${{ vars.APP_DIR || '/app' }}
-  APP_SOURCE_DIR: ${{ vars.APP_SOURCE_DIR || '/app/source' }}
-  BACKEND_SUBDIR: ${{ vars.BACKEND_SUBDIR || 'shop' }}
-  FRONTEND_SUBDIR: ${{ vars.FRONTEND_SUBDIR || 'client-shop' }}
-  BACKEND_IMAGE: ${{ vars.BACKEND_IMAGE || 'sprite-shop/backend:latest' }}
-  FRONTEND_IMAGE: ${{ vars.FRONTEND_IMAGE || 'sprite-shop/frontend:latest' }}
+  BACKEND_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/pixelism-shop-backend:latest
+  FRONTEND_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/pixelism-shop-frontend:latest
   BACKEND_PORT: ${{ vars.BACKEND_PORT || '8080' }}
   FRONTEND_PORT: ${{ vars.FRONTEND_PORT || '3000' }}
 
@@ -34,28 +31,57 @@ jobs:
         uses: actions/checkout@v4
 
       # ──────────────────────────────────────
-      # 2. Setup SSH Agent
+      # 2. Login Docker Hub
+      # ──────────────────────────────────────
+      - name: Login to Docker Hub
+        run: |
+          echo "${{ secrets.DOCKERHUB_TOKEN }}" \
+            | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+
+      # ──────────────────────────────────────
+      # 3. Build & Push Backend
+      # ──────────────────────────────────────
+      - name: Build & Push Backend
+        run: |
+          docker build -t ${{ env.BACKEND_IMAGE }} ./shop
+          docker push ${{ env.BACKEND_IMAGE }}
+
+      # ──────────────────────────────────────
+      # 4. Build & Push Frontend
+      # ──────────────────────────────────────
+      - name: Build & Push Frontend
+        run: |
+          docker build \
+            --build-arg NEXT_PUBLIC_API_URL=https://${{ secrets.EC2_HOST }}/api/v1 \
+            --build-arg NEXT_PUBLIC_BACKEND_URL=https://${{ secrets.EC2_HOST }} \
+            -t ${{ env.FRONTEND_IMAGE }} \
+            ./client-shop
+          docker push ${{ env.FRONTEND_IMAGE }}
+
+      # ──────────────────────────────────────
+      # 5. Setup SSH
       # ──────────────────────────────────────
       - name: Setup SSH Agent
         uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
 
-      # ──────────────────────────────────────
-      # 3. Verify EC2 connectivity
-      # ──────────────────────────────────────
-      - name: Verify EC2 connectivity & add known_hosts
+      - name: Add known_hosts
         run: |
-          nc -zv -w 10 "${{ secrets.EC2_HOST }}" 22
           mkdir -p ~/.ssh && chmod 700 ~/.ssh
-          ssh-keyscan -H "${{ secrets.EC2_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null || true
+          ssh-keyscan -H "${{ secrets.EC2_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
 
       # ──────────────────────────────────────
-      # 4. Create .env
+      # 6. Create .env
       # ──────────────────────────────────────
       - name: Create .env
         run: |
           printf '%s\n' \
+            "BACKEND_IMAGE=${{ env.BACKEND_IMAGE }}" \
+            "FRONTEND_IMAGE=${{ env.FRONTEND_IMAGE }}" \
+            "BACKEND_PORT=${{ env.BACKEND_PORT }}" \
+            "FRONTEND_PORT=${{ env.FRONTEND_PORT }}" \
+            "COMPOSE_PROJECT_NAME=pixelism" \
             "DB_HOST=${{ secrets.DB_HOST }}" \
             "DB_PORT=${{ secrets.DB_PORT }}" \
             "DB_NAME=${{ secrets.DB_NAME }}" \
@@ -71,8 +97,6 @@ jobs:
             "MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}" \
             "FRONTEND_REDIRECT_URI=${{ secrets.FRONTEND_REDIRECT_URI }}" \
             "OAUTH2_REDIRECT_BASE_URI=${{ secrets.OAUTH2_REDIRECT_BASE_URI }}" \
-            "NEXT_PUBLIC_API_URL=https://${{ secrets.EC2_HOST }}/api/v1" \
-            "NEXT_PUBLIC_BACKEND_URL=https://${{ secrets.EC2_HOST }}" \
             "CLIENT_ID_GOOGLE=${{ secrets.CLIENT_ID_GOOGLE }}" \
             "CLIENT_SECRET_GOOGLE=${{ secrets.CLIENT_SECRET_GOOGLE }}" \
             "CLIENT_ID_GITHUB=${{ secrets.CLIENT_ID_GITHUB }}" \
@@ -80,70 +104,55 @@ jobs:
             "CLOUDINARY_CLOUD_NAME=${{ secrets.CLOUDINARY_CLOUD_NAME }}" \
             "CLOUDINARY_API_KEY=${{ secrets.CLOUDINARY_API_KEY }}" \
             "CLOUDINARY_API_SECRET=${{ secrets.CLOUDINARY_API_SECRET }}" \
-            "COMPOSE_PROJECT_NAME=pixelism" \
-            "BACKEND_IMAGE=${{ env.BACKEND_IMAGE }}" \
-            "FRONTEND_IMAGE=${{ env.FRONTEND_IMAGE }}" \
-            "BACKEND_PORT=${{ env.BACKEND_PORT }}" \
-            "FRONTEND_PORT=${{ env.FRONTEND_PORT }}" \
             > /tmp/app.env
 
-          echo ".env preview (values masked):"
+          echo "=== .env preview (masked) ==="
           sed 's/=.*/=***/' /tmp/app.env
 
       # ──────────────────────────────────────
-      # 5. Upload files to EC2
+      # 7. Upload files to EC2
       # ──────────────────────────────────────
       - name: Upload files to EC2
         run: |
           ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "mkdir -p ${{ env.APP_DIR }}"
-          scp /tmp/app.env ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${{ env.APP_DIR }}/.env
-          scp docker-compose.prod.yml ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${{ env.APP_DIR }}/docker-compose.yml
+          scp /tmp/app.env \
+            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${{ env.APP_DIR }}/.env
+          scp docker-compose.prod.yml \
+            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${{ env.APP_DIR }}/docker-compose.yml
 
       # ──────────────────────────────────────
-      # 6. Deploy on EC2
+      # 8. Deploy on EC2 (pull & up)
       # ──────────────────────────────────────
       - name: Deploy on EC2
+        env:
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          EC2_USER: ${{ secrets.EC2_USER }}
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          APP_DIR: ${{ env.APP_DIR }}
         run: |
           ssh -o ServerAliveInterval=60 \
-            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} \
-            REPO="${{ github.repository }}" \
-            APP_DIR="${{ env.APP_DIR }}" \
-            SOURCE_DIR="${{ env.APP_SOURCE_DIR }}" \
-            BACKEND_SUBDIR="${{ env.BACKEND_SUBDIR }}" \
-            FRONTEND_SUBDIR="${{ env.FRONTEND_SUBDIR }}" \
-            BACKEND_IMAGE="${{ env.BACKEND_IMAGE }}" \
-            FRONTEND_IMAGE="${{ env.FRONTEND_IMAGE }}" \
+            ${EC2_USER}@${EC2_HOST} \
+            APP_DIR="${APP_DIR}" \
+            DOCKERHUB_USERNAME="${DOCKERHUB_USERNAME}" \
+            DOCKERHUB_TOKEN="${DOCKERHUB_TOKEN}" \
             bash -s << 'ENDSSH'
             set -e
-
-            echo "━━━━ Clean and clone fresh ━━━━"
-            # Xóa thư mục source cũ
-            rm -rf "${SOURCE_DIR}"
-            
-            # Clone lại với SSH URL
-            git clone "git@github.com:${REPO}.git" "${SOURCE_DIR}"
-            cd "${SOURCE_DIR}"
-
-            echo "━━━━ Build images ━━━━"
-            docker build -t "${BACKEND_IMAGE}" "${SOURCE_DIR}/${BACKEND_SUBDIR}"
-
-            NEXT_PUBLIC_API_URL=$(grep '^NEXT_PUBLIC_API_URL=' "${APP_DIR}/.env" | cut -d'=' -f2)
-            NEXT_PUBLIC_BACKEND_URL=$(grep '^NEXT_PUBLIC_BACKEND_URL=' "${APP_DIR}/.env" | cut -d'=' -f2)
-
-            docker build \
-              --build-arg NEXT_PUBLIC_API_URL="${NEXT_PUBLIC_API_URL}" \
-              --build-arg NEXT_PUBLIC_BACKEND_URL="${NEXT_PUBLIC_BACKEND_URL}" \
-              -t "${FRONTEND_IMAGE}" \
-              "${SOURCE_DIR}/${FRONTEND_SUBDIR}"
-
-            echo "━━━━ Stop existing containers ━━━━"
             cd "${APP_DIR}"
-            docker compose --env-file .env down --remove-orphans || true
 
-            echo "━━━━ Start services ━━━━"
-            cd "${APP_DIR}"
-            docker compose --env-file .env up -d redis
-            docker compose --env-file .env up -d --no-deps --force-recreate shop-backend shop-frontend
+            echo "━━━━ Verify .env ━━━━"
+            echo "BACKEND_IMAGE=$(grep '^BACKEND_IMAGE=' .env | cut -d'=' -f2)"
+            echo "FRONTEND_IMAGE=$(grep '^FRONTEND_IMAGE=' .env | cut -d'=' -f2)"
+
+            echo "━━━━ Login Docker Hub ━━━━"
+            echo "${DOCKERHUB_TOKEN}" \
+              | docker login -u "${DOCKERHUB_USERNAME}" --password-stdin
+
+            echo "━━━━ Pull latest images ━━━━"
+            docker compose --env-file .env pull
+
+            echo "━━━━ Restart services ━━━━"
+            docker compose --env-file .env up -d --remove-orphans --force-recreate
 
             echo "━━━━ Prune old images ━━━━"
             docker image prune -f
@@ -152,7 +161,7 @@ jobs:
           ENDSSH
 
       # ──────────────────────────────────────
-      # 7. Health Check
+      # 9. Health Check
       # ──────────────────────────────────────
       - name: Health Check
         run: |
@@ -168,7 +177,7 @@ jobs:
             && echo "Frontend OK" || { echo "ERROR: Frontend health check failed"; exit 1; }
 
       # ──────────────────────────────────────
-      # 8. Summary
+      # 10. Summary
       # ──────────────────────────────────────
       - name: Summary
         if: always()
