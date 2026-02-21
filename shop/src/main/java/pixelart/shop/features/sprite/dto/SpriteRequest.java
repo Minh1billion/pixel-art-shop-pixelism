@@ -20,7 +20,5 @@ public record SpriteRequest(
         BigDecimal price,
 
         @NotNull(message = "Category can't be null")
-        UUID categoryId,
-
-        List<String> tags
+        List<UUID> categoryIds
 ) {}

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { AuthService } from './services/auth.service';
 import { AuthValidators } from './utils/validators';
 import { useAuthContext } from './context/AuthContext';
+import type { LoginRequest, RegisterRequest, ResetPasswordRequest } from '@/features/auth/types';
 
 export const useLogin = () => {
   const [loading, setLoading] = useState(false);
@@ -12,26 +13,18 @@ export const useLogin = () => {
   const router = useRouter();
   const { refreshUser } = useAuthContext();
 
-  const login = async (email: string, password: string) => {
+  const login = async (data: LoginRequest) => {
     setLoading(true);
     setError(null);
 
-    const emailError = AuthValidators.validateEmail(email);
-    if (emailError) {
-      setError(emailError);
-      setLoading(false);
-      return;
-    }
+    const emailError = AuthValidators.validateEmail(data.email);
+    if (emailError) { setError(emailError); setLoading(false); return; }
 
-    const passwordError = AuthValidators.validatePassword(password);
-    if (passwordError) {
-      setError(passwordError);
-      setLoading(false);
-      return;
-    }
+    const passwordError = AuthValidators.validatePassword(data.password);
+    if (passwordError) { setError(passwordError); setLoading(false); return; }
 
     try {
-      await AuthService.login(email, password);
+      await AuthService.login(data);
       refreshUser();
       router.push('/home');
     } catch (err: any) {
@@ -57,11 +50,7 @@ export const useRegister = () => {
     setError(null);
 
     const emailError = AuthValidators.validateEmail(email);
-    if (emailError) {
-      setError(emailError);
-      setLoading(false);
-      return;
-    }
+    if (emailError) { setError(emailError); setLoading(false); return; }
 
     try {
       await AuthService.sendRegistrationOtp(email);
@@ -74,54 +63,27 @@ export const useRegister = () => {
     }
   };
 
-  const register = async (
-    email: string,
-    username: string,
-    fullName: string,
-    password: string,
-    confirmPassword: string,
-    otp: string
-  ) => {
+  const register = async (data: RegisterRequest) => {
     setLoading(true);
     setError(null);
 
-    const usernameError = AuthValidators.validateUsername(username);
-    if (usernameError) {
-      setError(usernameError);
-      setLoading(false);
-      return;
-    }
+    const usernameError = AuthValidators.validateUsername(data.username);
+    if (usernameError) { setError(usernameError); setLoading(false); return; }
 
-    const fullNameError = AuthValidators.validateFullName(fullName);
-    if (fullNameError) {
-      setError(fullNameError);
-      setLoading(false);
-      return;
-    }
+    const fullNameError = AuthValidators.validateFullName(data.fullName);
+    if (fullNameError) { setError(fullNameError); setLoading(false); return; }
 
-    const passwordError = AuthValidators.validatePassword(password);
-    if (passwordError) {
-      setError(passwordError);
-      setLoading(false);
-      return;
-    }
+    const passwordError = AuthValidators.validatePassword(data.password);
+    if (passwordError) { setError(passwordError); setLoading(false); return; }
 
-    const matchError = AuthValidators.validatePasswordMatch(password, confirmPassword);
-    if (matchError) {
-      setError(matchError);
-      setLoading(false);
-      return;
-    }
+    const matchError = AuthValidators.validatePasswordMatch(data.password, data.confirmPassword);
+    if (matchError) { setError(matchError); setLoading(false); return; }
 
-    const otpError = AuthValidators.validateOtp(otp);
-    if (otpError) {
-      setError(otpError);
-      setLoading(false);
-      return;
-    }
+    const otpError = AuthValidators.validateOtp(data.otp);
+    if (otpError) { setError(otpError); setLoading(false); return; }
 
     try {
-      await AuthService.register(email, username, fullName, password, confirmPassword, otp);
+      await AuthService.register(data);
       refreshUser();
       router.push('/home');
     } catch (err: any) {
@@ -147,11 +109,7 @@ export const useResetPassword = () => {
     setError(null);
 
     const emailError = AuthValidators.validateEmail(email);
-    if (emailError) {
-      setError(emailError);
-      setLoading(false);
-      return;
-    }
+    if (emailError) { setError(emailError); setLoading(false); return; }
 
     try {
       await AuthService.sendResetPasswordOtp(email);
@@ -164,38 +122,21 @@ export const useResetPassword = () => {
     }
   };
 
-  const resetPassword = async (
-    email: string,
-    otp: string,
-    newPassword: string,
-    confirmPassword: string
-  ) => {
+  const resetPassword = async (data: ResetPasswordRequest) => {
     setLoading(true);
     setError(null);
 
-    const otpError = AuthValidators.validateOtp(otp);
-    if (otpError) {
-      setError(otpError);
-      setLoading(false);
-      return;
-    }
+    const otpError = AuthValidators.validateOtp(data.otp);
+    if (otpError) { setError(otpError); setLoading(false); return; }
 
-    const passwordError = AuthValidators.validatePassword(newPassword);
-    if (passwordError) {
-      setError(passwordError);
-      setLoading(false);
-      return;
-    }
+    const passwordError = AuthValidators.validatePassword(data.newPassword);
+    if (passwordError) { setError(passwordError); setLoading(false); return; }
 
-    const matchError = AuthValidators.validatePasswordMatch(newPassword, confirmPassword);
-    if (matchError) {
-      setError(matchError);
-      setLoading(false);
-      return;
-    }
+    const matchError = AuthValidators.validatePasswordMatch(data.newPassword, data.confirmPassword);
+    if (matchError) { setError(matchError); setLoading(false); return; }
 
     try {
-      await AuthService.resetPassword(email, otp, newPassword, confirmPassword);
+      await AuthService.resetPassword(data);
       refreshUser();
       router.push('/home');
     } catch (err: any) {

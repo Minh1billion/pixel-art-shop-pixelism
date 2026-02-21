@@ -7,6 +7,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import pixelart.shop.features.category.entity.Category;
 import pixelart.shop.features.user.entity.User;
 
+import javax.net.ssl.SSLSession;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -14,7 +15,8 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "sprites")
-@Data
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -44,9 +46,13 @@ public class Sprite {
     @Column(nullable = false)
     private String cloudinaryId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id", nullable = false)
-    private Category category;
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "sprite_categories",
+            joinColumns = @JoinColumn(name = "sprite_id"),
+            inverseJoinColumns = @JoinColumn(name = "category_id")
+    )
+    private List<Category> categories;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by", nullable = false)
@@ -54,11 +60,6 @@ public class Sprite {
 
     @Builder.Default
     private boolean isActive = true;
-
-    @ElementCollection
-    @CollectionTable(name = "sprite_tags", joinColumns = @JoinColumn(name = "sprite_id"))
-    @Column(name = "tag")
-    private List<String> tags;
 
     @CreationTimestamp
     private LocalDateTime createdAt;

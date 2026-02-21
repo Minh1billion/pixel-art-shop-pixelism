@@ -7,6 +7,7 @@ export interface RegisterRequest {
   otp: string;
   username: string;
   password: string;
+  confirmPassword: string;
   fullName: string;
 }
 
@@ -19,6 +20,7 @@ export interface ResetPasswordRequest {
   email: string;
   otp: string;
   newPassword: string;
+  confirmPassword: string;
 }
 
 export interface RefreshTokenRequest {
@@ -34,10 +36,4 @@ export interface AuthResponse {
     username: string;
     fullName: string;
   };
-}
-
-export interface ApiResponse<T> {
-  success: boolean;
-  message: string;
-  data: T;
 }

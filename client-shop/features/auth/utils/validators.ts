@@ -27,11 +27,7 @@ export class AuthValidators {
     if (password.length > 100) {
       return "Password is too long (max 100 characters)";
     }
-    
-    // Optional: Check password strength
-    // if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) {
-    //   return "Password must contain uppercase, lowercase, and number";
-    // }
+
     
     return null;
   }

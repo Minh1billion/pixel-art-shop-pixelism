@@ -30,21 +30,8 @@ export default function SignUpForm({ onSwitchToLogin }: SignUpFormProps) {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (password !== confirmPassword) {
-      alert("The Sacred Runes do not match!");
-      return;
-    }
-
     try {
-      await register(
-        email,
-        username,
-        fullName,
-        password,
-        confirmPassword,
-        otp
-      );
+      await register({ email, username, fullName, password, confirmPassword, otp });
     } catch (err) {
       console.error(err);
     }
@@ -62,14 +49,10 @@ export default function SignUpForm({ onSwitchToLogin }: SignUpFormProps) {
         </div>
       )}
 
-      {/* STEP 1 */}
       {step === "email" && (
         <form onSubmit={handleSendEmail}>
           <div className="mb-4">
-            <label className="mb-2 block text-sm text-green-400">
-              Guild Mail
-            </label>
-
+            <label className="mb-2 block text-sm text-green-400">Guild Mail</label>
             <input
               type="email"
               value={email}
@@ -91,24 +74,17 @@ export default function SignUpForm({ onSwitchToLogin }: SignUpFormProps) {
 
           <p className="text-center text-sm text-zinc-400">
             Already sworn to the realm?{" "}
-            <button
-              type="button"
-              onClick={onSwitchToLogin}
-              className="text-green-400 hover:text-green-300 transition"
-            >
+            <button type="button" onClick={onSwitchToLogin} className="text-green-400 hover:text-green-300 transition">
               Return to the Gate
             </button>
           </p>
         </form>
       )}
 
-      {/* STEP 2 */}
       {step === "verify" && (
         <form onSubmit={handleRegister}>
           <div className="mb-4">
-            <label className="mb-2 block text-sm text-green-400">
-              Hero Name
-            </label>
+            <label className="mb-2 block text-sm text-green-400">Hero Name</label>
             <input
               type="text"
               value={username}
@@ -121,9 +97,7 @@ export default function SignUpForm({ onSwitchToLogin }: SignUpFormProps) {
           </div>
 
           <div className="mb-4">
-            <label className="mb-2 block text-sm text-green-400">
-              True Name
-            </label>
+            <label className="mb-2 block text-sm text-green-400">True Name</label>
             <input
               type="text"
               value={fullName}
@@ -136,9 +110,7 @@ export default function SignUpForm({ onSwitchToLogin }: SignUpFormProps) {
           </div>
 
           <div className="mb-4">
-            <label className="mb-2 block text-sm text-green-400">
-              Sacred Rune
-            </label>
+            <label className="mb-2 block text-sm text-green-400">Sacred Rune</label>
             <input
               type="password"
               value={password}
@@ -152,9 +124,7 @@ export default function SignUpForm({ onSwitchToLogin }: SignUpFormProps) {
           </div>
 
           <div className="mb-4">
-            <label className="mb-2 block text-sm text-green-400">
-              Confirm Sacred Rune
-            </label>
+            <label className="mb-2 block text-sm text-green-400">Confirm Sacred Rune</label>
             <input
               type="password"
               value={confirmPassword}
@@ -167,9 +137,7 @@ export default function SignUpForm({ onSwitchToLogin }: SignUpFormProps) {
           </div>
 
           <div className="mb-6">
-            <label className="mb-2 block text-sm text-green-400">
-              Arcane Seal
-            </label>
+            <label className="mb-2 block text-sm text-green-400">Arcane Seal</label>
             <input
               type="text"
               value={otp}
@@ -191,11 +159,7 @@ export default function SignUpForm({ onSwitchToLogin }: SignUpFormProps) {
 
           <p className="text-center text-sm text-zinc-400">
             Already sworn to the realm?{" "}
-            <button
-              type="button"
-              onClick={onSwitchToLogin}
-              className="text-green-400 hover:text-green-300 transition"
-            >
+            <button type="button" onClick={onSwitchToLogin} className="text-green-400 hover:text-green-300 transition">
               Return to the Gate
             </button>
           </p>

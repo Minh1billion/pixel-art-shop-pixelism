@@ -1,183 +1,81 @@
 import { api } from "@/lib/axios";
-import { AuthValidators } from "../utils/validators";
 import type {
     SendOtpRequest,
     RegisterRequest,
     LoginRequest,
     ResetPasswordRequest,
-    ApiResponse,
     AuthResponse
 } from "@/features/auth/types";
+import type { ApiResponse } from "@/features/shared/components/types";
 
 export class AuthService {
 
     static async sendRegistrationOtp(email: string): Promise<void> {
-        const emailError = AuthValidators.validateEmail(email);
-        if (emailError) {
-            throw new Error(emailError);
-        }
-
         try {
             const response = await api.post<ApiResponse<string>>(
                 "/auth/register/send-otp",
                 { email } as SendOtpRequest
             );
-
-            if (!response.data.success) {
-                throw new Error(response.data.message);
-            }
+            if (!response.data.success) throw new Error(response.data.message);
         } catch (error: any) {
-            if (error.response?.data?.message) {
-                throw new Error(error.response.data.message);
-            }
-            throw error;
+            throw new Error(error.response?.data?.message ?? error.message);
         }
     }
 
     static async sendResetPasswordOtp(email: string): Promise<void> {
-        const emailError = AuthValidators.validateEmail(email);
-        if (emailError) {
-            throw new Error(emailError);
-        }
-
         try {
             const response = await api.post<ApiResponse<string>>(
                 "/auth/reset-password/send-otp",
                 { email } as SendOtpRequest
             );
-
-            if (!response.data.success) {
-                throw new Error(response.data.message);
-            }
+            if (!response.data.success) throw new Error(response.data.message);
         } catch (error: any) {
-            if (error.response?.data?.message) {
-                throw new Error(error.response.data.message);
-            }
-            throw error;
+            throw new Error(error.response?.data?.message ?? error.message);
         }
     }
 
-    static async register(
-        email: string,
-        username: string,
-        fullName: string,
-        password: string,
-        confirmPassword: string,
-        otp: string
-    ): Promise<void> {
-        const emailError = AuthValidators.validateEmail(email);
-        if (emailError) throw new Error(emailError);
-
-        const usernameError = AuthValidators.validateUsername(username);
-        if (usernameError) throw new Error(usernameError);
-
-        const fullNameError = AuthValidators.validateFullName(fullName);
-        if (fullNameError) throw new Error(fullNameError);
-
-        const passwordError = AuthValidators.validatePassword(password);
-        if (passwordError) throw new Error(passwordError);
-
-        const matchError = AuthValidators.validatePasswordMatch(password, confirmPassword);
-        if (matchError) throw new Error(matchError);
-
-        const otpError = AuthValidators.validateOtp(otp);
-        if (otpError) throw new Error(otpError);
-
+    static async register(data: RegisterRequest): Promise<void> {
         try {
             const response = await api.post<ApiResponse<AuthResponse["user"]>>(
                 "/auth/register",
-                {
-                    email,
-                    username,
-                    fullName,
-                    password,
-                    otp
-                } as RegisterRequest
+                data
             );
-
-            if (!response.data.success) {
-                throw new Error(response.data.message);
-            }
-
+            if (!response.data.success) throw new Error(response.data.message);
             if (response.data.data) {
                 localStorage.setItem("user", JSON.stringify(response.data.data));
             }
         } catch (error: any) {
-            if (error.response?.data?.message) {
-                throw new Error(error.response.data.message);
-            }
-            throw error;
+            throw new Error(error.response?.data?.message ?? error.message);
         }
     }
 
-    static async login(email: string, password: string): Promise<void> {
-        const emailError = AuthValidators.validateEmail(email);
-        if (emailError) throw new Error(emailError);
-
-        const passwordError = AuthValidators.validatePassword(password);
-        if (passwordError) throw new Error(passwordError);
-
+    static async login(data: LoginRequest): Promise<void> {
         try {
             const response = await api.post<ApiResponse<AuthResponse["user"]>>(
                 "/auth/login",
-                { email, password } as LoginRequest
+                data
             );
-
-            if (!response.data.success) {
-                throw new Error(response.data.message);
-            }
-
+            if (!response.data.success) throw new Error(response.data.message);
             if (response.data.data) {
                 localStorage.setItem("user", JSON.stringify(response.data.data));
             }
         } catch (error: any) {
-            if (error.response?.data?.message) {
-                throw new Error(error.response.data.message);
-            }
-            throw error;
+            throw new Error(error.response?.data?.message ?? error.message);
         }
     }
 
-    static async resetPassword(
-        email: string,
-        otp: string,
-        newPassword: string,
-        confirmPassword: string
-    ): Promise<void> {
-        const emailError = AuthValidators.validateEmail(email);
-        if (emailError) throw new Error(emailError);
-
-        const otpError = AuthValidators.validateOtp(otp);
-        if (otpError) throw new Error(otpError);
-
-        const passwordError = AuthValidators.validatePassword(newPassword);
-        if (passwordError) throw new Error(passwordError);
-
-        const matchError = AuthValidators.validatePasswordMatch(newPassword, confirmPassword);
-        if (matchError) throw new Error(matchError);
-
+    static async resetPassword(data: ResetPasswordRequest): Promise<void> {
         try {
             const response = await api.post<ApiResponse<AuthResponse["user"]>>(
                 "/auth/reset-password",
-                {
-                    email,
-                    otp,
-                    newPassword
-                } as ResetPasswordRequest
+                data
             );
-
-            if (!response.data.success) {
-                throw new Error(response.data.message);
-            }
-
+            if (!response.data.success) throw new Error(response.data.message);
             if (response.data.data) {
                 localStorage.setItem("user", JSON.stringify(response.data.data));
             }
         } catch (error: any) {
-            if (error.response?.data?.message) {
-                throw new Error(error.response.data.message);
-            }
-            throw error;
+            throw new Error(error.response?.data?.message ?? error.message);
         }
     }
 
@@ -191,10 +89,8 @@ export class AuthService {
 
     static getCurrentUser(): AuthResponse["user"] | null {
         if (typeof window === "undefined") return null;
-
         const userStr = localStorage.getItem("user");
         if (!userStr) return null;
-
         try {
             return JSON.parse(userStr);
         } catch {
@@ -205,19 +101,14 @@ export class AuthService {
     static async fetchCurrentUser(): Promise<AuthResponse["user"]> {
         try {
             const response = await api.get<ApiResponse<AuthResponse["user"]>>("/auth/me");
-
-            if (response.data.success && response.data.data) {
-                localStorage.setItem("user", JSON.stringify(response.data.data));
-                return response.data.data;
+            if (!response.data.success || !response.data.data) {
+                throw new Error(response.data.message ?? "Failed to fetch user");
             }
-
-            throw new Error("Failed to fetch user");
+            localStorage.setItem("user", JSON.stringify(response.data.data));
+            return response.data.data;
         } catch (error: any) {
             localStorage.removeItem("user");
-            if (error.response?.data?.message) {
-                throw new Error(error.response.data.message);
-            }
-            throw error;
+            throw new Error(error.response?.data?.message ?? error.message);
         }
     }
 
@@ -228,16 +119,12 @@ export class AuthService {
     static async refreshUserData(): Promise<void> {
         try {
             const response = await api.get<ApiResponse<AuthResponse["user"]>>("/auth/me");
-
             if (response.data.success && response.data.data) {
                 localStorage.setItem("user", JSON.stringify(response.data.data));
             }
         } catch (error: any) {
             localStorage.removeItem("user");
-            if (error.response?.data?.message) {
-                throw new Error(error.response.data.message);
-            }
-            throw error;
+            throw new Error(error.response?.data?.message ?? error.message);
         }
     }
 }

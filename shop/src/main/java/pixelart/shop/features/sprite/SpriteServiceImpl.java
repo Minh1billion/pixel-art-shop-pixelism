@@ -4,22 +4,27 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import pixelart.shop.features.category.entity.Category;
 import pixelart.shop.features.category.repository.CategoryRepository;
+import pixelart.shop.features.sprite.dto.SpriteFilterRequest;
 import pixelart.shop.features.sprite.dto.SpriteRequest;
 import pixelart.shop.features.sprite.dto.SpriteResponse;
 import pixelart.shop.features.sprite.entity.Sprite;
 import pixelart.shop.features.sprite.repository.SpriteRepository;
+import pixelart.shop.features.sprite.repository.SpriteSpecification;
 import pixelart.shop.features.user.entity.User;
 import pixelart.shop.shared.exception.AppException;
 import pixelart.shop.shared.infrastructure.storage.FileStorage;
 import pixelart.shop.shared.infrastructure.storage.UploadResult;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -34,20 +39,34 @@ public class SpriteServiceImpl implements SpriteService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<SpriteResponse> getAll(UUID categoryId, int page, int size) {
+    public Page<SpriteResponse> getAll(
+            SpriteFilterRequest filter,
+            int page,
+            int size
+    ) {
+        Sort sort = Sort.unsorted();
 
-        PageRequest pageable =
-                PageRequest.of(page, size, Sort.by("createdAt").descending());
+        if (filter.sortBy() != null && !filter.sortBy().isBlank()) {
+            Sort.Direction direction =
+                    "desc".equalsIgnoreCase(filter.sortOrder())
+                            ? Sort.Direction.DESC
+                            : Sort.Direction.ASC;
 
-        if (categoryId != null) {
-            return spriteRepository
-                    .findByCategoryIdAndIsActiveTrue(categoryId, pageable)
-                    .map(SpriteResponse::from);
+            sort = Sort.by(direction, filter.sortBy());
         }
 
-        return spriteRepository
-                .findByIsActiveTrue(pageable)
-                .map(SpriteResponse::from);
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Specification<Sprite> spec = SpriteSpecification.filter(
+                filter.categoryIds(),
+                filter.minPrice(),
+                filter.maxPrice(),
+                filter.keyword()
+        );
+
+        Page<Sprite> spritePage = spriteRepository.findAll(spec, pageable);
+
+        return spritePage.map(SpriteResponse::from);
     }
 
     @Override
@@ -68,10 +87,12 @@ public class SpriteServiceImpl implements SpriteService {
             User currentUser
     ) throws IOException {
 
-        Category category = categoryRepository
-                .findById(request.categoryId())
-                .orElseThrow(() ->
-                        AppException.notFound("Category does not exist"));
+        List<Category> categories =
+                categoryRepository.findAllById(request.categoryIds());
+
+        if (categories.isEmpty()) {
+            throw AppException.badRequest("At least one category is required");
+        }
 
         UploadResult uploadResult = uploadImage(image);
 
@@ -82,9 +103,8 @@ public class SpriteServiceImpl implements SpriteService {
                 .price(request.price())
                 .imageUrl(uploadResult.url())
                 .cloudinaryId(uploadResult.publicId())
-                .category(category)
+                .categories(categories)
                 .createdBy(currentUser)
-                .tags(request.tags())
                 .build();
 
         return SpriteResponse.from(
@@ -104,10 +124,12 @@ public class SpriteServiceImpl implements SpriteService {
                 .orElseThrow(() ->
                         AppException.notFound("Sprite does not exist"));
 
-        Category category = categoryRepository
-                .findById(request.categoryId())
-                .orElseThrow(() ->
-                        AppException.notFound("Category does not exist"));
+        List<Category> categories =
+                categoryRepository.findAllById(request.categoryIds());
+
+        if (categories.isEmpty()) {
+            throw AppException.badRequest("At least one category is required");
+        }
 
         if (image != null && !image.isEmpty()) {
 
@@ -124,8 +146,7 @@ public class SpriteServiceImpl implements SpriteService {
         sprite.setName(request.name());
         sprite.setDescription(request.description());
         sprite.setPrice(request.price());
-        sprite.setCategory(category);
-        sprite.setTags(request.tags());
+        sprite.setCategories(categories);
 
         return SpriteResponse.from(
                 spriteRepository.save(sprite)
@@ -142,8 +163,6 @@ public class SpriteServiceImpl implements SpriteService {
 
         sprite.setActive(false);
         spriteRepository.save(sprite);
-
-        log.info("Soft deleted sprite: {} (Image preserved for potential recovery)", sprite.getName());
     }
 
     public void hardDelete(UUID id) throws IOException {
@@ -158,8 +177,6 @@ public class SpriteServiceImpl implements SpriteService {
         }
 
         spriteRepository.delete(sprite);
-
-        log.info("Permanently deleted sprite: {}", sprite.getName());
     }
 
     public SpriteResponse restore(UUID id) {
@@ -174,8 +191,6 @@ public class SpriteServiceImpl implements SpriteService {
         }
 
         sprite.setActive(true);
-
-        log.info("Restored sprite: {}", sprite.getName());
 
         return SpriteResponse.from(
                 spriteRepository.save(sprite)

@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import pixelart.shop.features.sprite.dto.SpriteFilterRequest;
 import pixelart.shop.features.sprite.dto.SpriteRequest;
 import pixelart.shop.features.sprite.dto.SpriteResponse;
 import pixelart.shop.features.user.entity.User;
@@ -24,13 +25,13 @@ public class SpriteController {
 
     @GetMapping
     public ResponseEntity<ApiResponse<Page<SpriteResponse>>> getAll(
-            @RequestParam(required = false) UUID categoryId,
+            SpriteFilterRequest filter,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
+            @RequestParam(defaultValue = "12") int size
     ) {
 
         Page<SpriteResponse> result =
-                spriteService.getAll(categoryId, page, size);
+                spriteService.getAll(filter, page, size);
 
         return ResponseEntity.ok(
                 ApiResponse.success(result)

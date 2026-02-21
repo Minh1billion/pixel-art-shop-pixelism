@@ -1,5 +1,6 @@
 package pixelart.shop.features.sprite.dto;
 
+import pixelart.shop.features.category.entity.Category;
 import pixelart.shop.features.sprite.entity.Sprite;
 
 import java.math.BigDecimal;
@@ -14,10 +15,9 @@ public record SpriteResponse(
         String description,
         BigDecimal price,
         String imageUrl,
-        UUID categoryId,
-        String categoryName,
+        List<UUID> categoryIds,
+        List<String> categoryNames,
         String createdBy,
-        List<String> tags,
         LocalDateTime createdAt
 ) {
 
@@ -29,10 +29,11 @@ public record SpriteResponse(
                 s.getDescription(),
                 s.getPrice(),
                 s.getImageUrl(),
-                s.getCategory().getId(),
-                s.getCategory().getName(),
+                s.getCategories().stream()
+                        .map(Category::getId).toList(),
+                s.getCategories().stream()
+                        .map(Category::getName).toList(),
                 s.getCreatedBy().getNickname(),
-                s.getTags(),
                 s.getCreatedAt()
         );
     }

@@ -10,10 +10,7 @@ interface LoginFormProps {
   onSwitchToReset: () => void;
 }
 
-export default function LoginForm({
-  onSwitchToSignup,
-  onSwitchToReset,
-}: LoginFormProps) {
+export default function LoginForm({ onSwitchToSignup, onSwitchToReset }: LoginFormProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const { login, loading, error } = useLogin();
@@ -21,46 +18,37 @@ export default function LoginForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await login(email, password);
+      await login({ email, password });
     } catch (err) {
       console.error(err);
     }
   };
 
   const handleGoogleLogin = () => {
-    const backendUrl =
-      process.env.NEXT_PUBLIC_API_URL?.replace("/api/v1", "") ||
-      "http://localhost:8080";
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL?.replace("/api/v1", "") || "http://localhost:8080";
     window.location.href = `${backendUrl}/oauth2/authorization/google`;
   };
 
   const handleGithubLogin = () => {
-    const backendUrl =
-      process.env.NEXT_PUBLIC_API_URL?.replace("/api/v1", "") ||
-      "http://localhost:8080";
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL?.replace("/api/v1", "") || "http://localhost:8080";
     window.location.href = `${backendUrl}/oauth2/authorization/github`;
   };
 
   return (
     <div className="w-full rounded-3xl bg-zinc-900/90 border border-green-400/20 p-8 backdrop-blur-sm shadow-[0_0_30px_rgba(34,197,94,0.15)]">
       <form onSubmit={handleSubmit}>
-        {/* TITLE */}
         <h1 className="mb-8 text-center text-3xl font-bold text-white drop-shadow-[0_0_10px_rgba(34,197,94,0.6)]">
           Return, Adventurer.
         </h1>
 
-        {/* ERROR MESSAGE */}
         {error && (
           <div className="mb-4 rounded-lg bg-red-500/10 border border-red-500/40 p-3 text-sm text-red-400">
             {error}
           </div>
         )}
 
-        {/* EMAIL */}
         <div className="mb-4">
-          <label className="mb-2 block text-sm text-green-400">
-            Adventurer&apos;s Mail
-          </label>
+          <label className="mb-2 block text-sm text-green-400">Adventurer&apos;s Mail</label>
           <input
             type="email"
             value={email}
@@ -72,11 +60,8 @@ export default function LoginForm({
           />
         </div>
 
-        {/* PASSWORD */}
         <div className="mb-6">
-          <label className="mb-2 block text-sm text-green-400">
-            Sacred Password
-          </label>
+          <label className="mb-2 block text-sm text-green-400">Sacred Password</label>
           <input
             type="password"
             value={password}
@@ -88,7 +73,6 @@ export default function LoginForm({
           />
         </div>
 
-        {/* SIGN IN BUTTON */}
         <button
           type="submit"
           disabled={loading}
@@ -97,32 +81,22 @@ export default function LoginForm({
           {loading ? "UNLOCKING..." : "UNSEAL THE GATE"}
         </button>
 
-        {/* FORGOT PASSWORD */}
         <div className="mb-6 text-center">
-          <button
-            type="button"
-            onClick={onSwitchToReset}
-            className="text-sm text-green-400 hover:text-green-300 transition"
-          >
+          <button type="button" onClick={onSwitchToReset} className="text-sm text-green-400 hover:text-green-300 transition">
             Lost your sacred rune?
           </button>
         </div>
 
-        {/* DIVIDER */}
         <div className="relative mb-6">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-green-400/20"></div>
+            <div className="w-full border-t border-green-400/20" />
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="bg-zinc-900 px-4 text-green-400">
-              OR
-            </span>
+            <span className="bg-zinc-900 px-4 text-green-400">OR</span>
           </div>
         </div>
 
-        {/* OAUTH */}
         <div className="mb-6 flex gap-4">
-          {/* GOOGLE */}
           <button
             type="button"
             onClick={handleGoogleLogin}
@@ -131,8 +105,6 @@ export default function LoginForm({
           >
             <FcGoogle size={20} />
           </button>
-
-          {/* GITHUB */}
           <button
             type="button"
             onClick={handleGithubLogin}
@@ -143,14 +115,9 @@ export default function LoginForm({
           </button>
         </div>
 
-        {/* SIGN UP */}
         <p className="text-center text-sm text-zinc-400">
           New to this realm? Begin your journey.{" "}
-          <button
-            type="button"
-            onClick={onSwitchToSignup}
-            className="text-green-400 hover:text-green-300 transition"
-          >
+          <button type="button" onClick={onSwitchToSignup} className="text-green-400 hover:text-green-300 transition">
             Create Your Legend
           </button>
         </p>
