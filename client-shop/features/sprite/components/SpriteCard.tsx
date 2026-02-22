@@ -37,19 +37,11 @@ export default function SpriteCard({ sprite, view = "grid" }: SpriteCardProps) {
             <h3 className="text-white text-sm font-semibold truncate group-hover:text-green-300 transition-colors">
               {sprite.name}
             </h3>
-            {sprite.price === 0 && (
-              <span className="shrink-0 bg-green-500 text-green-950 text-[9px] font-bold px-1.5 py-0.5 rounded-full">
-                FREE
-              </span>
-            )}
           </div>
         </div>
 
-        {/* Price + Action */}
+        {/* Action */}
         <div className="shrink-0 flex items-center gap-3">
-          <span className="text-green-400 font-bold text-sm">
-            {sprite.price === 0 ? "Free" : `$${sprite.price.toFixed(2)}`}
-          </span>
           <button className="text-xs bg-green-500/10 hover:bg-green-500/20 border border-green-500/30 text-green-400 px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap">
             Get
           </button>
@@ -78,12 +70,6 @@ export default function SpriteCard({ sprite, view = "grid" }: SpriteCardProps) {
         ) : (
           <div className="absolute inset-0 flex items-center justify-center text-3xl">🎮</div>
         )}
-
-        {sprite.price === 0 && (
-          <div className="absolute top-2.5 left-2.5 bg-green-500 text-green-950 text-[10px] font-bold px-2 py-0.5 rounded-full">
-            FREE
-          </div>
-        )}
       </div>
 
       <div className="p-4">
@@ -92,9 +78,6 @@ export default function SpriteCard({ sprite, view = "grid" }: SpriteCardProps) {
         </h3>
 
         <div className="flex items-center justify-between mt-3">
-          <span className="text-green-400 font-bold text-sm">
-            {sprite.price === 0 ? "Free" : `$${sprite.price.toFixed(2)}`}
-          </span>
           <button className="text-xs bg-green-500/10 hover:bg-green-500/20 border border-green-500/30 text-green-400 px-3 py-1 rounded-lg transition-colors">
             Get
           </button>

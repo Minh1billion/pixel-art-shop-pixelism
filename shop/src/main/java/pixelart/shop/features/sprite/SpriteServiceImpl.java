@@ -60,8 +60,8 @@ public class SpriteServiceImpl implements SpriteService {
 
         Specification<Sprite> spec = SpriteSpecification.filter(
                 filter.categoryIds(),
-                filter.minPrice(),
-                filter.maxPrice(),
+//                filter.minPrice(),
+//                filter.maxPrice(),
                 filter.keyword()
         );
 
@@ -101,8 +101,8 @@ public class SpriteServiceImpl implements SpriteService {
         Sprite sprite = Sprite.builder()
                 .name(request.name())
                 .slug(generateUniqueSlug(request.name()))
-                .description(request.description())
-                .price(request.price())
+//                .description(request.description())
+//                .price(request.price())
                 .imageUrl(uploadResult.url())
                 .cloudinaryId(uploadResult.publicId())
                 .categories(categories)
@@ -146,8 +146,8 @@ public class SpriteServiceImpl implements SpriteService {
         }
 
         sprite.setName(request.name());
-        sprite.setDescription(request.description());
-        sprite.setPrice(request.price());
+//        sprite.setDescription(request.description());
+//        sprite.setPrice(request.price());
         sprite.setCategories(categories);
 
         return SpriteResponse.from(

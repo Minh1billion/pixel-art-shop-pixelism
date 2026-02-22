@@ -1,27 +1,30 @@
 "use client";
 
 import { useState } from "react";
-import type { SpriteFilterRequest } from "@/features/sprite/types";
+import type { AssetPackFilterRequest } from "@/features/assetpack/types";
 import type { CategoryResponse } from "@/features/sprite/types";
 
-interface SpriteFiltersProps {
-    filter: SpriteFilterRequest;
+interface AssetPackFiltersProps {
+    filter: AssetPackFilterRequest;
     categories: CategoryResponse[];
-    onFilterChange: (updates: Partial<SpriteFilterRequest>) => void;
+    onFilterChange: (updates: Partial<AssetPackFilterRequest>) => void;
     onCategoryToggle: (id: string) => void;
     onReset: () => void;
 }
 
-export default function SpriteFilters({
+export default function AssetPackFilters({
     filter,
     categories,
     onFilterChange,
     onCategoryToggle,
     onReset,
-}: SpriteFiltersProps) {
+}: AssetPackFiltersProps) {
+    const [priceOpen, setPriceOpen] = useState(false);
 
     const selectedCount =
-        (filter.categoryIds?.length ?? 0);
+        (filter.categoryIds?.length ?? 0) +
+        (filter.minPrice !== undefined ? 1 : 0) +
+        (filter.maxPrice !== undefined ? 1 : 0);
 
     return (
         <aside className="w-full space-y-6">
@@ -40,7 +43,7 @@ export default function SpriteFilters({
                 )}
             </div>
 
-            {/* Keyword Search */}
+            {/* Keyword */}
             <div className="space-y-2">
                 <label className="text-xs text-gray-500 uppercase tracking-wider">Search</label>
                 <div className="relative">
@@ -54,7 +57,7 @@ export default function SpriteFilters({
                     </svg>
                     <input
                         type="text"
-                        placeholder="Search sprites..."
+                        placeholder="Search packs..."
                         value={filter.keyword ?? ""}
                         onChange={(e) => onFilterChange({ keyword: e.target.value })}
                         className="w-full bg-neutral-900 border border-green-900/20 rounded-xl pl-9 pr-4 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-green-500/40 transition-colors"
@@ -88,6 +91,65 @@ export default function SpriteFilters({
                 </div>
             </div>
 
+            {/* Price Range */}
+            <div className="space-y-2">
+                <button
+                    onClick={() => setPriceOpen((v) => !v)}
+                    className="w-full flex items-center justify-between text-xs text-gray-500 uppercase tracking-wider hover:text-gray-400 transition-colors"
+                >
+                    <span>Price Range</span>
+                    <svg
+                        className={`w-3.5 h-3.5 transition-transform ${priceOpen ? "rotate-180" : ""}`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                    >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+
+                {priceOpen && (
+                    <div className="grid grid-cols-2 gap-2 pt-1">
+                        <div>
+                            <label className="text-[10px] text-gray-600 mb-1 block">Min ($)</label>
+                            <input
+                                type="number"
+                                min={0}
+                                placeholder="0"
+                                value={filter.minPrice ?? ""}
+                                onChange={(e) =>
+                                    onFilterChange({
+                                        minPrice: e.target.value === "" ? undefined : Number(e.target.value),
+                                    })
+                                }
+                                className="w-full bg-neutral-900 border border-green-900/20 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-green-500/40 transition-colors"
+                            />
+                        </div>
+                        <div>
+                            <label className="text-[10px] text-gray-600 mb-1 block">Max ($)</label>
+                            <input
+                                type="number"
+                                min={0}
+                                placeholder="∞"
+                                value={filter.maxPrice ?? ""}
+                                onChange={(e) =>
+                                    onFilterChange({
+                                        maxPrice: e.target.value === "" ? undefined : Number(e.target.value),
+                                    })
+                                }
+                                className="w-full bg-neutral-900 border border-green-900/20 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-green-500/40 transition-colors"
+                            />
+                        </div>
+                        <button
+                            onClick={() => onFilterChange({ minPrice: 0, maxPrice: 0 })}
+                            className="col-span-2 text-xs bg-green-500/10 hover:bg-green-500/20 border border-green-500/20 text-green-400 py-1.5 rounded-lg transition-colors"
+                        >
+                            Free only
+                        </button>
+                    </div>
+                )}
+            </div>
+
             {/* Sort */}
             <div className="space-y-2">
                 <label className="text-xs text-gray-500 uppercase tracking-wider">Sort By</label>
@@ -96,6 +158,8 @@ export default function SpriteFilters({
                         [
                             { label: "Newest", sortBy: "createdAt", sortOrder: "desc" },
                             { label: "Oldest", sortBy: "createdAt", sortOrder: "asc" },
+                            { label: "Price ↑", sortBy: "price", sortOrder: "asc" },
+                            { label: "Price ↓", sortBy: "price", sortOrder: "desc" },
                         ] as const
                     ).map((opt) => {
                         const active =

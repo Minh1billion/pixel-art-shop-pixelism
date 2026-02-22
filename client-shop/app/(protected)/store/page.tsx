@@ -1,21 +1,21 @@
 "use client";
 
 import { useEffect } from "react";
-import { useSpriteFilter} from "@/features/sprite/hooks/useSpriteFilter";
+import { useAssetPackFilter } from "@/features/assetpack/hooks/useAssetPackFilter";
+import { useAssetPacks } from "@/features/assetpack/hooks/useAssetPacks";
 import { usePagination } from "@/features/sprite/hooks/usePagination";
-import { useSprites } from "@/features/sprite/hooks/useSprites";
 import { useCategories } from "@/features/sprite/hooks/useCategories";
-import SpriteFilters from "@/features/sprite/components/SpriteFilters";
-import SpriteGrid from "@/features/sprite/components/SpriteGrid";
+import AssetPackFilters from "@/features/assetpack/components/AssetPackFilters";
+import AssetPackGrid from "@/features/assetpack/components/AssetPackGrid";
 import Pagination from "@/features/sprite/components/Pagination";
 
-export default function SpritePage() {
-    const { filter, updateFilter, resetFilter, toggleCategory } = useSpriteFilter();
+export default function AssetPackPage() {
+    const { filter, updateFilter, resetFilter, toggleCategory } = useAssetPackFilter();
     const { page, size, goToPage, reset: resetPage } = usePagination(0, 12);
-    const { data, loading, error } = useSprites(filter, page, size);
+    const { data, loading, error } = useAssetPacks(filter, page, size);
     const { data: categories } = useCategories();
 
-    // Reset to page 0 whenever filter changes
+    // Reset to page 0 whenever filter changesS
     useEffect(() => {
         resetPage();
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -27,17 +27,17 @@ export default function SpritePage() {
                 {/* Page Header */}
                 <div className="mb-8">
                     <h1 className="text-2xl font-bold text-white tracking-tight">
-                        Sprite <span className="text-green-400">Store</span>
+                        Asset Pack <span className="text-green-400">Store</span>
                     </h1>
                     <p className="text-gray-500 text-sm mt-1">
-                        Browse and download pixel-perfect game sprites
+                        Browse curated sprite packs for your next game
                     </p>
                 </div>
 
                 <div className="flex flex-col lg:flex-row gap-8">
-                    {/* Sidebar Filters */}
+                    {/* Sidebar */}
                     <div className="lg:w-56 xl:w-64 shrink-0">
-                        <SpriteFilters
+                        <AssetPackFilters
                             filter={filter}
                             categories={categories}
                             onFilterChange={updateFilter}
@@ -48,15 +48,14 @@ export default function SpritePage() {
 
                     {/* Main Content */}
                     <div className="flex-1 min-w-0 space-y-6">
-                        {/* Result count */}
                         {data && !loading && (
                             <p className="text-xs text-gray-500">
-                                {data.totalElements} sprite{data.totalElements !== 1 ? "s" : ""} found
+                                {data.totalElements} pack{data.totalElements !== 1 ? "s" : ""} found
                             </p>
                         )}
 
-                        <SpriteGrid
-                            sprites={data?.content ?? []}
+                        <AssetPackGrid
+                            packs={data?.content ?? []}
                             loading={loading}
                             error={error}
                         />
