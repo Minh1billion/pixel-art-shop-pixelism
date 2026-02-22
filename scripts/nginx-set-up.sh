@@ -71,7 +71,7 @@ server {
 server {
     listen 80;
     server_name pixelism.duckdns.org;
-    return 301 https://$host$request_uri;
+    return 308 https://$host$request_uri;
 }
 EOF
 
