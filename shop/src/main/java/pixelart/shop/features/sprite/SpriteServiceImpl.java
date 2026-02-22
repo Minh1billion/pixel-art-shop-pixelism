@@ -13,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 import pixelart.shop.features.category.entity.Category;
 import pixelart.shop.features.category.repository.CategoryRepository;
 import pixelart.shop.features.sprite.dto.SpriteFilterRequest;
+import pixelart.shop.features.sprite.dto.SpriteListResponse;
 import pixelart.shop.features.sprite.dto.SpriteRequest;
 import pixelart.shop.features.sprite.dto.SpriteResponse;
 import pixelart.shop.features.sprite.entity.Sprite;
@@ -39,7 +40,7 @@ public class SpriteServiceImpl implements SpriteService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<SpriteResponse> getAll(
+    public Page<SpriteListResponse> getAll(
             SpriteFilterRequest filter,
             int page,
             int size
@@ -66,7 +67,7 @@ public class SpriteServiceImpl implements SpriteService {
 
         Page<Sprite> spritePage = spriteRepository.findAll(spec, pageable);
 
-        return spritePage.map(SpriteResponse::from);
+        return spritePage.map(SpriteListResponse::from);
     }
 
     @Override
@@ -74,7 +75,8 @@ public class SpriteServiceImpl implements SpriteService {
     public SpriteResponse getById(UUID id) {
 
         return spriteRepository
-                .findByIdAndIsActiveTrue(id)
+                .findWithDetailsById(id)
+                .filter(Sprite::isActive)
                 .map(SpriteResponse::from)
                 .orElseThrow(() ->
                         AppException.notFound("Sprite does not exist"));

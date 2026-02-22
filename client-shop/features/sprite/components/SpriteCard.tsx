@@ -1,9 +1,9 @@
 "use client";
 
-import type { SpriteResponse } from "@/features/sprite/types";
+import type { SpriteListResponse, SpriteResponse } from "@/features/sprite/types";
 
 interface SpriteCardProps {
-  sprite: SpriteResponse;
+  sprite: SpriteListResponse;
   view?: "grid" | "list";
 }
 
@@ -43,16 +43,6 @@ export default function SpriteCard({ sprite, view = "grid" }: SpriteCardProps) {
               </span>
             )}
           </div>
-
-          {sprite.categoryNames?.length > 0 && (
-            <p className="text-gray-500 text-xs mt-0.5 truncate">
-              {sprite.categoryNames.join(", ")}
-            </p>
-          )}
-
-          {sprite.description && (
-            <p className="text-gray-600 text-xs mt-1 line-clamp-1">{sprite.description}</p>
-          )}
         </div>
 
         {/* Price + Action */}
@@ -100,12 +90,6 @@ export default function SpriteCard({ sprite, view = "grid" }: SpriteCardProps) {
         <h3 className="text-white text-sm font-semibold truncate group-hover:text-green-300 transition-colors">
           {sprite.name}
         </h3>
-
-        {sprite.categoryNames?.length > 0 && (
-          <p className="text-gray-500 text-xs mt-0.5 truncate">
-            {sprite.categoryNames.join(", ")}
-          </p>
-        )}
 
         <div className="flex items-center justify-between mt-3">
           <span className="text-green-400 font-bold text-sm">

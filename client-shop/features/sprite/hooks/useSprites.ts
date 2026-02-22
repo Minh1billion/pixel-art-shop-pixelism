@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { SpriteService } from "../services/sprite.service";
-import type { SpriteFilterRequest, SpriteResponse } from "@/features/sprite/types";
+import type { SpriteFilterRequest, SpriteListResponse, SpriteResponse } from "@/features/sprite/types";
 import type { PageResponse } from "@/features/shared/components/types";
 
 export function useSprites(filter: SpriteFilterRequest, page: number, size: number) {
-    const [data, setData] = useState<PageResponse<SpriteResponse> | null>(null);
+    const [data, setData] = useState<PageResponse<SpriteListResponse> | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 

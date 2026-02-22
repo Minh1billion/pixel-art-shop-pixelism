@@ -2,12 +2,12 @@
 
 import { useState } from "react";
 import SpriteCard from "./SpriteCard";
-import type { SpriteResponse } from "@/features/sprite/types";
+import type { SpriteListResponse, SpriteResponse } from "@/features/sprite/types";
 
 type ViewMode = "grid" | "list";
 
 interface SpriteGridProps {
-  sprites: SpriteResponse[];
+  sprites: SpriteListResponse[];
   loading: boolean;
   error: string | null;
 }

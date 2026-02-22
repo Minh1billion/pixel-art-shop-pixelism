@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRegister } from "@/features/auth/hooks";
+import { useRegister } from "@/features/auth/hooks/useRegister";
 
 interface SignUpFormProps {
   onSwitchToLogin: () => void;

@@ -5,6 +5,15 @@ export interface SpriteRequest {
     categories: string[];
 }
 
+export interface SpriteListResponse {
+  id: string;
+  name: string;
+  slug: string;
+  price: number;
+  imageUrl: string;
+  createdAt: string;
+}
+
 export interface SpriteResponse {
     id: string;
     name: string;

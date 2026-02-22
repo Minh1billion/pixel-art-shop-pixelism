@@ -22,16 +22,11 @@ public class SpriteSpecification {
             Predicate predicate = cb.conjunction();
 
             predicate = cb.and(predicate, cb.isTrue(root.get("isActive")));
-            
+
             if (categoryIds != null && !categoryIds.isEmpty()) {
-                Subquery<Category> subquery = query.subquery(Category.class);
-                Root<Sprite> subRoot = subquery.correlate(root);
-                Join<Sprite, Category> catJoin = subRoot.join("categories");
-
-                subquery.select(catJoin)
-                        .where(catJoin.get("id").in(categoryIds));
-
-                predicate = cb.and(predicate, cb.exists(subquery));
+                Join<Sprite, Category> categoryJoin = root.join("categories", JoinType.INNER);
+                predicate = cb.and(predicate, categoryJoin.get("id").in(categoryIds));
+                query.distinct(true);
             }
 
             if (minPrice != null) {

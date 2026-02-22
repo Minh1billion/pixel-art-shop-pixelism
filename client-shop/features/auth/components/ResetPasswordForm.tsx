@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useResetPassword } from "@/features/auth/hooks";
+import { useResetPassword } from "@/features/auth/hooks/useResetPassword";
 
 interface ResetPasswordFormProps {
   onSwitchToLogin: () => void;

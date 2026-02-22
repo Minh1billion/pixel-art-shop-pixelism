@@ -4,7 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { useAuth, useLogout } from "@/features/auth/hooks";
+import { useAuth } from "@/features/auth/hooks/useAuth";
+import { useLogout } from "@/features/auth/hooks/useLogout";
 
 import { HiHome, HiShoppingBag, HiPhoto, HiUser, HiDocumentText } from "react-icons/hi2";
 import { HiShoppingCart, HiMenu, HiX } from "react-icons/hi";

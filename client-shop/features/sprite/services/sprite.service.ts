@@ -3,6 +3,7 @@ import type {
     SpriteRequest,
     SpriteResponse,
     SpriteFilterRequest,
+    SpriteListResponse,
 } from "@/features/sprite/types";
 import type { ApiResponse, PageResponse } from "@/features/shared/components/types";
 
@@ -11,9 +12,9 @@ export class SpriteService {
         filter: SpriteFilterRequest,
         page = 0,
         size = 12
-    ): Promise<PageResponse<SpriteResponse>> {
+    ): Promise<PageResponse<SpriteListResponse>> {
         try {
-            const response = await api.get<ApiResponse<PageResponse<SpriteResponse>>>(
+            const response = await api.get<ApiResponse<PageResponse<SpriteListResponse>>>(
                 "/sprites",
                 { params: { ...filter, page, size } }
             );
@@ -24,9 +25,9 @@ export class SpriteService {
         }
     }
 
-    static async create(data: SpriteRequest): Promise<SpriteResponse> {
+    static async create(data: SpriteRequest): Promise<SpriteListResponse> {
         try {
-            const response = await api.post<ApiResponse<SpriteResponse>>("/sprites", data);
+            const response = await api.post<ApiResponse<SpriteListResponse>>("/sprites", data);
             if (!response.data.success) throw new Error(response.data.message);
             return response.data.data;
         } catch (error: any) {
