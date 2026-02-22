@@ -10,7 +10,6 @@ public record SpriteListResponse(
         UUID id,
         String name,
         String slug,
-        BigDecimal price,
         String imageUrl,
         LocalDateTime createdAt
 ) {
@@ -19,7 +18,6 @@ public record SpriteListResponse(
                 s.getId(),
                 s.getName(),
                 s.getSlug(),
-                s.getPrice(),
                 s.getImageUrl(),
                 s.getCreatedAt()
         );
