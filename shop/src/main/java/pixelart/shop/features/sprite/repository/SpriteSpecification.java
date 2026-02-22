@@ -13,8 +13,8 @@ public class SpriteSpecification {
 
     public static Specification<Sprite> filter(
             List<UUID> categoryIds,
-            BigDecimal minPrice,
-            BigDecimal maxPrice,
+//            BigDecimal minPrice,
+//            BigDecimal maxPrice,
             String keyword
     ) {
         return (root, query, cb) -> {
@@ -34,19 +34,19 @@ public class SpriteSpecification {
                 predicate = cb.and(predicate, cb.exists(subquery));
             }
 
-            if (minPrice != null) {
-                predicate = cb.and(
-                        predicate,
-                        cb.greaterThanOrEqualTo(root.get("price"), minPrice)
-                );
-            }
-
-            if (maxPrice != null) {
-                predicate = cb.and(
-                        predicate,
-                        cb.lessThanOrEqualTo(root.get("price"), maxPrice)
-                );
-            }
+//            if (minPrice != null) {
+//                predicate = cb.and(
+//                        predicate,
+//                        cb.greaterThanOrEqualTo(root.get("price"), minPrice)
+//                );
+//            }
+//
+//            if (maxPrice != null) {
+//                predicate = cb.and(
+//                        predicate,
+//                        cb.lessThanOrEqualTo(root.get("price"), maxPrice)
+//                );
+//            }
 
             if (keyword != null && !keyword.isBlank()) {
                 String pattern = "%" + keyword.toLowerCase() + "%";

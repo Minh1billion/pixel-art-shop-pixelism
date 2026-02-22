@@ -1,22 +1,24 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import type { SpriteFilterRequest } from "@/features/sprite/types";
+import type { AssetPackFilterRequest } from "@/features/assetpack/types";
 
-const DEFAULT_FILTER: SpriteFilterRequest = {
+const DEFAULT_FILTER: AssetPackFilterRequest = {
     keyword: "",
     categoryIds: [],
+    minPrice: undefined,
+    maxPrice: undefined,
     sortBy: "createdAt",
     sortOrder: "desc",
 };
 
-export function useSpriteFilter(initial?: Partial<SpriteFilterRequest>) {
-    const [filter, setFilter] = useState<SpriteFilterRequest>({
+export function useAssetPackFilter(initial?: Partial<AssetPackFilterRequest>) {
+    const [filter, setFilter] = useState<AssetPackFilterRequest>({
         ...DEFAULT_FILTER,
         ...initial,
     });
 
-    const updateFilter = useCallback((updates: Partial<SpriteFilterRequest>) => {
+    const updateFilter = useCallback((updates: Partial<AssetPackFilterRequest>) => {
         setFilter((prev) => ({ ...prev, ...updates }));
     }, []);
 

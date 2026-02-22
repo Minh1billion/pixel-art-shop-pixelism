@@ -13,11 +13,11 @@ public record SpriteRequest(
         @NotBlank(message = "Sprite name can't be blank")
         String name,
 
-        String description,
-
-        @NotNull(message = "Price can't be null")
-        @PositiveOrZero(message = "Price must be greater or equal 0")
-        BigDecimal price,
+//        String description,
+//
+//        @NotNull(message = "Price can't be null")
+//        @PositiveOrZero(message = "Price must be greater or equal 0")
+//        BigDecimal price,
 
         @NotNull(message = "Category can't be null")
         List<UUID> categoryIds
