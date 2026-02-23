@@ -26,10 +26,12 @@ function FormContent({ editingSprite, onClose, onSaved }: FormContentProps) {
     const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
     const [image, setImage] = useState<File | null>(null);
     const [preview, setPreview] = useState<string | null>(null);
-    const [fetchingSprite, setFetchingSprite] = useState(false);
+    const [loadedId, setLoadedId] = useState<string | null>(null);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
     const isEditing = !!editingSprite;
+
+    const fetchingSprite = !!editingSprite && loadedId !== editingSprite.id;
 
     const { save, loading, error } = useSavingSprite({
         onSuccess: () => {
@@ -41,14 +43,12 @@ function FormContent({ editingSprite, onClose, onSaved }: FormContentProps) {
     useEffect(() => {
         if (!editingSprite) return;
 
-        setFetchingSprite(true);
-        SpriteService.getById(editingSprite.id)
-            .then((data) => {
-                setName(data.name);
-                setSelectedCategories(data.categoryIds ?? []);
-                setPreview(data.imageUrl ?? null);
-            })
-            .finally(() => setFetchingSprite(false));
+        SpriteService.getById(editingSprite.id).then((data) => {
+            setName(data.name);
+            setSelectedCategories(data.categoryIds ?? []);
+            setPreview(data.imageUrl ?? null);
+            setLoadedId(data.id);
+        });
     }, [editingSprite]);
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -122,6 +122,7 @@ function FormContent({ editingSprite, onClose, onSaved }: FormContentProps) {
                                 backgroundSize: "10px 10px",
                             }}
                         >
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                                 src={preview}
                                 alt="preview"
