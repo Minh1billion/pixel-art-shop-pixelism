@@ -49,7 +49,7 @@ export default function GalleryPage() {
                         <h1 className="text-2xl font-bold text-white tracking-tight">
                             Sprite <span className="text-green-400">Store</span>
                         </h1>
-                        <p className="text-gray-500 text-sm mt-1">
+                        <p className="text-slate-400 text-sm mt-1">
                             Browse and download pixel-perfect game sprites
                         </p>
                     </div>
@@ -77,7 +77,7 @@ export default function GalleryPage() {
 
                     <div className="flex-1 min-w-0 space-y-6">
                         {data && !loading && (
-                            <p className="text-xs text-gray-500">
+                            <p className="text-xs text-slate-400">
                                 {data.totalElements} sprite{data.totalElements !== 1 ? "s" : ""} found
                             </p>
                         )}

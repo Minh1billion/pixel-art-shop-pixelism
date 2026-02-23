@@ -15,10 +15,8 @@ export default function AssetPackPage() {
     const { data, loading, error } = useAssetPacks(filter, page, size);
     const { data: categories } = useCategories();
 
-    // Reset to page 0 whenever filter changesS
     useEffect(() => {
         resetPage();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [filter]);
 
     return (
