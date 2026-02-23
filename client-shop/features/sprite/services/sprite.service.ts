@@ -25,9 +25,49 @@ export class SpriteService {
         }
     }
 
-    static async create(data: SpriteRequest): Promise<SpriteListResponse> {
+    static async getById(id: string): Promise<SpriteResponse> {
         try {
-            const response = await api.post<ApiResponse<SpriteListResponse>>("/sprites", data);
+            const response = await api.get<ApiResponse<SpriteResponse>>(`/sprites/${id}`);
+            if (!response.data.success) throw new Error(response.data.message);
+            return response.data.data;
+        } catch (error: any) {
+            throw new Error(error.response?.data?.message ?? error.message);
+        }
+    }
+
+    private static buildFormData(data: SpriteRequest, image?: File): FormData {
+        const formData = new FormData();
+        formData.append(
+            "data",
+            new Blob([JSON.stringify(data)], { type: "application/json" })
+        );
+        if (image) formData.append("image", image);
+        return formData;
+    }
+
+    static async create(data: SpriteRequest, image: File): Promise<SpriteResponse> {
+        try {
+            const response = await api.post<ApiResponse<SpriteResponse>>(
+                "/sprites",
+                this.buildFormData(data, image)
+            );
+            if (!response.data.success) throw new Error(response.data.message);
+            return response.data.data;
+        } catch (error: any) {
+            throw new Error(error.response?.data?.message ?? error.message);
+        }
+    }
+
+    static async update(
+        id: string,
+        data: SpriteRequest,
+        image?: File
+    ): Promise<SpriteResponse> {
+        try {
+            const response = await api.put<ApiResponse<SpriteResponse>>(
+                `/sprites/${id}`,
+                this.buildFormData(data, image)
+            );
             if (!response.data.success) throw new Error(response.data.message);
             return response.data.data;
         } catch (error: any) {

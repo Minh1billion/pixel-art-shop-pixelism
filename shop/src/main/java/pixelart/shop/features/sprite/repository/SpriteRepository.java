@@ -21,5 +21,6 @@ public interface SpriteRepository extends JpaRepository<Sprite, UUID>, JpaSpecif
     List<Sprite> findInactiveBefore(LocalDateTime cutoffDate);
 
     @EntityGraph(attributePaths = {"categories", "createdBy"})
+    @Query("SELECT s FROM Sprite s WHERE s.id = :id")
     Optional<Sprite> findWithDetailsById(UUID id);
 }

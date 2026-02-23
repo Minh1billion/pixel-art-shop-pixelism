@@ -1,13 +1,14 @@
 "use client";
 
-import type { SpriteListResponse, SpriteResponse } from "@/features/sprite/types";
+import type { SpriteListResponse } from "@/features/sprite/types";
 
 interface SpriteCardProps {
   sprite: SpriteListResponse;
   view?: "grid" | "list";
+  onEdit?: (sprite: SpriteListResponse) => void;
 }
 
-export default function SpriteCard({ sprite, view = "grid" }: SpriteCardProps) {
+export default function SpriteCard({ sprite, view = "grid", onEdit }: SpriteCardProps) {
   if (view === "list") {
     return (
       <div className="group flex items-center gap-4 bg-neutral-900 border border-green-900/20 rounded-2xl overflow-hidden hover:border-green-500/40 transition-all duration-300 hover:shadow-lg hover:shadow-green-900/20 p-3">
@@ -33,15 +34,21 @@ export default function SpriteCard({ sprite, view = "grid" }: SpriteCardProps) {
 
         {/* Info */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <h3 className="text-white text-sm font-semibold truncate group-hover:text-green-300 transition-colors">
-              {sprite.name}
-            </h3>
-          </div>
+          <h3 className="text-white text-sm font-semibold truncate group-hover:text-green-300 transition-colors">
+            {sprite.name}
+          </h3>
         </div>
 
-        {/* Action */}
-        <div className="shrink-0 flex items-center gap-3">
+        {/* Actions */}
+        <div className="shrink-0 flex items-center gap-2">
+          {onEdit && (
+            <button
+              onClick={() => onEdit(sprite)}
+              className="text-xs bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 text-gray-400 hover:text-white px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap"
+            >
+              Edit
+            </button>
+          )}
           <button className="text-xs bg-green-500/10 hover:bg-green-500/20 border border-green-500/30 text-green-400 px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap">
             Get
           </button>
@@ -50,7 +57,7 @@ export default function SpriteCard({ sprite, view = "grid" }: SpriteCardProps) {
     );
   }
 
-  // Grid view 
+  // Grid view
   return (
     <div className="group bg-neutral-900 border border-green-900/20 rounded-2xl overflow-hidden hover:border-green-500/40 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-green-900/20">
       <div
@@ -69,6 +76,16 @@ export default function SpriteCard({ sprite, view = "grid" }: SpriteCardProps) {
           />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center text-3xl">🎮</div>
+        )}
+
+        {/* Edit button overlay - chỉ hiện khi có onEdit */}
+        {onEdit && (
+          <button
+            onClick={() => onEdit(sprite)}
+            className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-neutral-900/80 hover:bg-neutral-800 border border-neutral-700 text-gray-300 hover:text-white text-xs px-2 py-1 rounded-lg backdrop-blur-sm"
+          >
+            Edit
+          </button>
         )}
       </div>
 

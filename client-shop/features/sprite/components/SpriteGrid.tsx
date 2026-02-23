@@ -10,6 +10,7 @@ interface SpriteGridProps {
   sprites: SpriteListResponse[];
   loading: boolean;
   error: string | null;
+  onEdit?: (sprite: SpriteListResponse) => void;
 }
 
 function GridIcon({ active }: { active: boolean }) {
@@ -41,7 +42,7 @@ function ListIcon({ active }: { active: boolean }) {
   );
 }
 
-export default function SpriteGrid({ sprites, loading, error }: SpriteGridProps) {
+export default function SpriteGrid({ sprites, loading, error, onEdit }: SpriteGridProps) {
   const [view, setView] = useState<ViewMode>("grid");
 
   const toolbar = (
@@ -140,13 +141,13 @@ export default function SpriteGrid({ sprites, loading, error }: SpriteGridProps)
       {view === "grid" ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
           {sprites.map((sprite) => (
-            <SpriteCard key={sprite.id} sprite={sprite} view="grid" />
+            <SpriteCard key={sprite.id} sprite={sprite} view="grid" onEdit={onEdit} />
           ))}
         </div>
       ) : (
         <div className="flex flex-col gap-2">
           {sprites.map((sprite) => (
-            <SpriteCard key={sprite.id} sprite={sprite} view="list" />
+            <SpriteCard key={sprite.id} sprite={sprite} view="list" onEdit={onEdit} />
           ))}
         </div>
       )}

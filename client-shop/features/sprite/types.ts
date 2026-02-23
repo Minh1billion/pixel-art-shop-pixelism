@@ -1,13 +1,12 @@
 export interface SpriteRequest {
     name: string;
-    categories: string[];
+    categoryIds: string[];
 }
 
 export interface SpriteListResponse {
   id: string;
   name: string;
   slug: string;
-  price: number;
   imageUrl: string;
   createdAt: string;
 }

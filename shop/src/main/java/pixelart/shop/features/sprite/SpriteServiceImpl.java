@@ -40,19 +40,13 @@ public class SpriteServiceImpl implements SpriteService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<SpriteListResponse> getAll(
-            SpriteFilterRequest filter,
-            int page,
-            int size
-    ) {
+    public Page<SpriteListResponse> getAll(SpriteFilterRequest filter, int page, int size) {
         Sort sort = Sort.unsorted();
 
         if (filter.sortBy() != null && !filter.sortBy().isBlank()) {
-            Sort.Direction direction =
-                    "desc".equalsIgnoreCase(filter.sortOrder())
-                            ? Sort.Direction.DESC
-                            : Sort.Direction.ASC;
-
+            Sort.Direction direction = "desc".equalsIgnoreCase(filter.sortOrder())
+                    ? Sort.Direction.DESC
+                    : Sort.Direction.ASC;
             sort = Sort.by(direction, filter.sortBy());
         }
 
@@ -60,37 +54,25 @@ public class SpriteServiceImpl implements SpriteService {
 
         Specification<Sprite> spec = SpriteSpecification.filter(
                 filter.categoryIds(),
-//                filter.minPrice(),
-//                filter.maxPrice(),
                 filter.keyword()
         );
 
-        Page<Sprite> spritePage = spriteRepository.findAll(spec, pageable);
-
-        return spritePage.map(SpriteListResponse::from);
+        return spriteRepository.findAll(spec, pageable).map(SpriteListResponse::from);
     }
 
     @Override
     @Transactional(readOnly = true)
     public SpriteResponse getById(UUID id) {
-
         return spriteRepository
                 .findWithDetailsById(id)
                 .filter(Sprite::isActive)
                 .map(SpriteResponse::from)
-                .orElseThrow(() ->
-                        AppException.notFound("Sprite does not exist"));
+                .orElseThrow(() -> AppException.notFound("Sprite does not exist"));
     }
 
     @Override
-    public SpriteResponse create(
-            SpriteRequest request,
-            MultipartFile image,
-            User currentUser
-    ) throws IOException {
-
-        List<Category> categories =
-                categoryRepository.findAllById(request.categoryIds());
+    public SpriteResponse create(SpriteRequest request, MultipartFile image, User currentUser) throws IOException {
+        List<Category> categories = categoryRepository.findAllById(request.categoryIds());
 
         if (categories.isEmpty()) {
             throw AppException.badRequest("At least one category is required");
@@ -101,78 +83,59 @@ public class SpriteServiceImpl implements SpriteService {
         Sprite sprite = Sprite.builder()
                 .name(request.name())
                 .slug(generateUniqueSlug(request.name()))
-//                .description(request.description())
-//                .price(request.price())
                 .imageUrl(uploadResult.url())
                 .cloudinaryId(uploadResult.publicId())
                 .categories(categories)
                 .createdBy(currentUser)
                 .build();
 
-        return SpriteResponse.from(
-                spriteRepository.save(sprite)
-        );
+        return SpriteResponse.from(spriteRepository.save(sprite));
     }
 
     @Override
-    public SpriteResponse update(
-            UUID id,
-            SpriteRequest request,
-            MultipartFile image
-    ) throws IOException {
-
+    public SpriteResponse update(UUID id, SpriteRequest request, MultipartFile image) throws IOException {
+        // Dùng findWithDetailsById để tránh lazy load createdBy sau này
         Sprite sprite = spriteRepository
-                .findById(id)
-                .orElseThrow(() ->
-                        AppException.notFound("Sprite does not exist"));
+                .findWithDetailsById(id)
+                .orElseThrow(() -> AppException.notFound("Sprite does not exist"));
 
-        List<Category> categories =
-                categoryRepository.findAllById(request.categoryIds());
+        List<Category> categories = categoryRepository.findAllById(request.categoryIds());
 
         if (categories.isEmpty()) {
             throw AppException.badRequest("At least one category is required");
         }
 
         if (image != null && !image.isEmpty()) {
-
             if (sprite.getCloudinaryId() != null) {
                 deleteImage(sprite.getCloudinaryId());
             }
 
             UploadResult uploadResult = uploadImage(image);
-
             sprite.setImageUrl(uploadResult.url());
             sprite.setCloudinaryId(uploadResult.publicId());
         }
 
         sprite.setName(request.name());
-//        sprite.setDescription(request.description());
-//        sprite.setPrice(request.price());
         sprite.setCategories(categories);
 
-        return SpriteResponse.from(
-                spriteRepository.save(sprite)
-        );
+        return SpriteResponse.from(spriteRepository.save(sprite));
     }
 
     @Override
     public void delete(UUID id) throws IOException {
-
         Sprite sprite = spriteRepository
                 .findById(id)
-                .orElseThrow(() ->
-                        AppException.notFound("Sprite does not exist"));
+                .orElseThrow(() -> AppException.notFound("Sprite does not exist"));
 
         sprite.setActive(false);
         spriteRepository.save(sprite);
     }
 
+    @Override
     public void hardDelete(UUID id) throws IOException {
-
         Sprite sprite = spriteRepository
                 .findById(id)
-                .orElseThrow(() ->
-                        AppException.notFound("Sprite does not exist"));
+                .orElseThrow(() -> AppException.notFound("Sprite does not exist"));
 
         if (sprite.getCloudinaryId() != null) {
             deleteImage(sprite.getCloudinaryId());
@@ -181,12 +144,11 @@ public class SpriteServiceImpl implements SpriteService {
         spriteRepository.delete(sprite);
     }
 
+    @Override
     public SpriteResponse restore(UUID id) {
-
         Sprite sprite = spriteRepository
-                .findById(id)
-                .orElseThrow(() ->
-                        AppException.notFound("Sprite does not exist"));
+                .findWithDetailsById(id)
+                .orElseThrow(() -> AppException.notFound("Sprite does not exist"));
 
         if (sprite.isActive()) {
             throw AppException.badRequest("Sprite is not deleted");
@@ -194,38 +156,25 @@ public class SpriteServiceImpl implements SpriteService {
 
         sprite.setActive(true);
 
-        return SpriteResponse.from(
-                spriteRepository.save(sprite)
-        );
+        return SpriteResponse.from(spriteRepository.save(sprite));
     }
 
     private UploadResult uploadImage(MultipartFile file) throws IOException {
-
         if (file == null || file.isEmpty()) {
             throw AppException.badRequest("Image is required");
         }
-
-        return fileStorage.upload(
-                file.getBytes(),
-                "sprites"
-        );
+        return fileStorage.upload(file.getBytes(), "sprites");
     }
 
     private void deleteImage(String publicId) {
-
         try {
             fileStorage.delete(publicId);
         } catch (IOException e) {
-            log.warn(
-                    "Unable to delete image ({}): {}",
-                    publicId,
-                    e.getMessage()
-            );
+            log.warn("Unable to delete image ({}): {}", publicId, e.getMessage());
         }
     }
 
     private String generateUniqueSlug(String name) {
-
         String baseSlug = name.toLowerCase()
                 .replaceAll("[^a-z0-9\\s-]", "")
                 .trim()
