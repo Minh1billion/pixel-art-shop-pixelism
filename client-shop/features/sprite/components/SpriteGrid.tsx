@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import SpriteCard from "./SpriteCard";
-import type { SpriteListResponse, SpriteResponse } from "@/features/sprite/types";
+import type { SpriteListResponse } from "@/features/sprite/types";
 
 type ViewMode = "grid" | "list";
 

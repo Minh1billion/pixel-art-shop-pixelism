@@ -1,7 +1,7 @@
 "use client";
 
 interface PaginationProps {
-    page: number;          // 0-indexed
+    page: number;
     totalPages: number;
     totalElements: number;
     size: number;
@@ -45,7 +45,6 @@ export default function Pagination({
             </p>
 
             <div className="flex items-center gap-1.5">
-                {/* Prev */}
                 <button
                     onClick={() => onPageChange(page - 1)}
                     disabled={page === 0}
@@ -77,7 +76,6 @@ export default function Pagination({
                     )
                 )}
 
-                {/* Next */}
                 <button
                     onClick={() => onPageChange(page + 1)}
                     disabled={page >= totalPages - 1}

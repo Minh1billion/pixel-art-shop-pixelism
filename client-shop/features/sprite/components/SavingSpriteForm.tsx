@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useSavingSprite } from "@/features/sprite/hooks/useSavingSprite";
 import { useCategories } from "@/features/sprite/hooks/useCategories";
 import { SpriteService } from "@/features/sprite/services/sprite.service";
@@ -30,6 +30,13 @@ export default function SavingSpriteForm({
     const fileInputRef = useRef<HTMLInputElement>(null);
     const isEditing = !!editingSprite;
 
+    const resetForm = useCallback(() => {
+        setName("");
+        setSelectedCategories([]);
+        setImage(null);
+        setPreview(null);
+    }, []);
+
     const { save, loading, error } = useSavingSprite({
         onSuccess: () => {
             onSaved();
@@ -51,14 +58,7 @@ export default function SavingSpriteForm({
                 setPreview(data.imageUrl ?? null);
             })
             .finally(() => setFetchingSprite(false));
-    }, [editingSprite, open]);
-
-    const resetForm = () => {
-        setName("");
-        setSelectedCategories([]);
-        setImage(null);
-        setPreview(null);
-    };
+    }, [editingSprite, open, resetForm]);
 
     const handleClose = () => {
         resetForm();
@@ -81,7 +81,7 @@ export default function SavingSpriteForm({
         e.preventDefault();
         if (!isEditing && !image) return;
         await save(
-            { name, categoryIds: selectedCategories }, 
+            { name, categoryIds: selectedCategories },
             image,
             editingSprite?.id
         );
@@ -91,15 +91,12 @@ export default function SavingSpriteForm({
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-            {/* Backdrop */}
             <div
                 className="absolute inset-0 bg-black/70 backdrop-blur-sm"
                 onClick={handleClose}
             />
 
-            {/* Dialog */}
             <div className="relative z-10 w-full max-w-md bg-neutral-900 border border-neutral-800 rounded-xl shadow-2xl p-6">
-                {/* Header */}
                 <div className="flex items-center justify-between mb-6">
                     <h2 className="text-white font-semibold text-base">
                         {isEditing ? "Edit Sprite" : "Upload Sprite"}
@@ -112,7 +109,6 @@ export default function SavingSpriteForm({
                     </button>
                 </div>
 
-                {/* Fetching state */}
                 {fetchingSprite ? (
                     <div className="space-y-4 animate-pulse">
                         <div className="h-4 bg-neutral-800 rounded w-1/4" />
@@ -127,7 +123,6 @@ export default function SavingSpriteForm({
                     </div>
                 ) : (
                     <form onSubmit={handleSubmit} className="space-y-5">
-                        {/* Name */}
                         <div>
                             <label className="block text-xs text-gray-400 mb-1.5">Name</label>
                             <input
@@ -140,7 +135,6 @@ export default function SavingSpriteForm({
                             />
                         </div>
 
-                        {/* Image Upload */}
                         <div>
                             <label className="block text-xs text-gray-400 mb-1.5">
                                 Image{" "}
@@ -153,12 +147,14 @@ export default function SavingSpriteForm({
                                 className="relative cursor-pointer border border-dashed border-neutral-700 hover:border-green-500 rounded-lg transition-colors overflow-hidden"
                             >
                                 {preview ? (
-                                    <div className="flex items-center justify-center h-36 bg-neutral-800"
+                                    <div
+                                        className="flex items-center justify-center h-36 bg-neutral-800"
                                         style={{
                                             backgroundImage: "repeating-conic-gradient(#1a1a1a 0% 25%, #232323 0% 50%)",
                                             backgroundSize: "10px 10px",
                                         }}
                                     >
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
                                         <img
                                             src={preview}
                                             alt="preview"
@@ -182,7 +178,6 @@ export default function SavingSpriteForm({
                             />
                         </div>
 
-                        {/* Categories */}
                         {categories && categories.length > 0 && (
                             <div>
                                 <label className="block text-xs text-gray-400 mb-2">
@@ -196,10 +191,11 @@ export default function SavingSpriteForm({
                                                 key={cat.id}
                                                 type="button"
                                                 onClick={() => toggleCategory(cat.id)}
-                                                className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${active
+                                                className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+                                                    active
                                                         ? "bg-green-500/20 border-green-500 text-green-400"
                                                         : "bg-neutral-800 border-neutral-700 text-gray-400 hover:border-neutral-500"
-                                                    }`}
+                                                }`}
                                             >
                                                 {cat.name}
                                             </button>
@@ -209,14 +205,12 @@ export default function SavingSpriteForm({
                             </div>
                         )}
 
-                        {/* Error */}
                         {error && (
                             <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
                                 {error}
                             </p>
                         )}
 
-                        {/* Actions */}
                         <div className="flex gap-3 pt-1">
                             <button
                                 type="button"

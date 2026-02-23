@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useSpriteFilter } from "@/features/sprite/hooks/useSpriteFilter";
 import { usePagination } from "@/features/sprite/hooks/usePagination";
 import { useSprites } from "@/features/sprite/hooks/useSprites";
@@ -24,7 +24,7 @@ export default function GalleryPage() {
 
     useEffect(() => {
         resetPage();
-    }, [filter]);
+    }, [filter, resetPage]);
 
     const openCreate = () => {
         setEditingSprite(null);
@@ -44,7 +44,6 @@ export default function GalleryPage() {
     return (
         <div className="min-h-screen bg-neutral-950 text-white">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-                {/* Header */}
                 <div className="mb-8 flex items-start justify-between gap-4">
                     <div>
                         <h1 className="text-2xl font-bold text-white tracking-tight">
@@ -66,7 +65,6 @@ export default function GalleryPage() {
                 </div>
 
                 <div className="flex flex-col lg:flex-row gap-8">
-                    {/* Sidebar */}
                     <div className="lg:w-56 xl:w-64 shrink-0">
                         <SpriteFilters
                             filter={filter}
@@ -77,7 +75,6 @@ export default function GalleryPage() {
                         />
                     </div>
 
-                    {/* Content */}
                     <div className="flex-1 min-w-0 space-y-6">
                         {data && !loading && (
                             <p className="text-xs text-gray-500">

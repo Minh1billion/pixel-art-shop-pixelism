@@ -7,9 +7,7 @@ export function usePagination(initialPage = 0, initialSize = 12) {
     const [size] = useState(initialSize);
 
     const goToPage = useCallback((p: number) => setPage(p), []);
-    const nextPage = useCallback(() => setPage((p) => p + 1), []);
-    const prevPage = useCallback(() => setPage((p) => Math.max(0, p - 1)), []);
     const reset = useCallback(() => setPage(0), []);
 
-    return { page, size, goToPage, nextPage, prevPage, reset };
+    return { page, size, goToPage, reset };
 }
