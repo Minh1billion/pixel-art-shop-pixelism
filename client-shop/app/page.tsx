@@ -12,10 +12,12 @@ export default function Entry() {
   return (
     <div className="flex min-h-screen">
       <div className="relative w-1/2 hidden md:block overflow-hidden">
-        <img
+        <Image
           src="/main-bg.jpg"
           alt="Pixel background"
-          className="absolute inset-0 w-full h-full object-cover scale-105"
+          fill
+          className="absolute inset-0 object-cover scale-105"
+          priority
         />
         <div className="absolute inset-0 bg-green-900/30" />
         <div className="absolute inset-0 flex flex-col justify-center px-10 lg:px-16 xl:px-20">

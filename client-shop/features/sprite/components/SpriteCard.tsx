@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import type { SpriteListResponse } from "@/features/sprite/types";
 
 interface SpriteCardProps {
@@ -12,7 +13,6 @@ export default function SpriteCard({ sprite, view = "grid", onEdit }: SpriteCard
   if (view === "list") {
     return (
       <div className="group flex items-center gap-4 bg-neutral-900 border border-green-900/20 rounded-2xl overflow-hidden hover:border-green-500/40 transition-all duration-300 hover:shadow-lg hover:shadow-green-900/20 p-3">
-        {/* Thumbnail */}
         <div
           className="shrink-0 w-16 h-16 rounded-xl overflow-hidden relative"
           style={{
@@ -21,10 +21,11 @@ export default function SpriteCard({ sprite, view = "grid", onEdit }: SpriteCard
           }}
         >
           {sprite.imageUrl ? (
-            <img
+            <Image
               src={sprite.imageUrl}
               alt={sprite.name}
-              className="absolute inset-0 w-full h-full object-contain p-2 transition-transform duration-300 group-hover:scale-110"
+              fill
+              className="object-contain p-2 transition-transform duration-300 group-hover:scale-110"
               style={{ imageRendering: "pixelated" }}
             />
           ) : (
@@ -32,14 +33,12 @@ export default function SpriteCard({ sprite, view = "grid", onEdit }: SpriteCard
           )}
         </div>
 
-        {/* Info */}
         <div className="flex-1 min-w-0">
           <h3 className="text-white text-sm font-semibold truncate group-hover:text-green-300 transition-colors">
             {sprite.name}
           </h3>
         </div>
 
-        {/* Actions */}
         <div className="shrink-0 flex items-center gap-2">
           {onEdit && (
             <button
@@ -57,7 +56,6 @@ export default function SpriteCard({ sprite, view = "grid", onEdit }: SpriteCard
     );
   }
 
-  // Grid view
   return (
     <div className="group bg-neutral-900 border border-green-900/20 rounded-2xl overflow-hidden hover:border-green-500/40 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-green-900/20">
       <div
@@ -68,17 +66,17 @@ export default function SpriteCard({ sprite, view = "grid", onEdit }: SpriteCard
         }}
       >
         {sprite.imageUrl ? (
-          <img
+          <Image
             src={sprite.imageUrl}
             alt={sprite.name}
-            className="absolute inset-0 w-full h-full object-contain p-4 transition-transform duration-300 group-hover:scale-110"
+            fill
+            className="object-contain p-4 transition-transform duration-300 group-hover:scale-110"
             style={{ imageRendering: "pixelated" }}
           />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center text-3xl">🎮</div>
         )}
 
-        {/* Edit button overlay - chỉ hiện khi có onEdit */}
         {onEdit && (
           <button
             onClick={() => onEdit(sprite)}
@@ -93,7 +91,6 @@ export default function SpriteCard({ sprite, view = "grid", onEdit }: SpriteCard
         <h3 className="text-white text-sm font-semibold truncate group-hover:text-green-300 transition-colors">
           {sprite.name}
         </h3>
-
         <div className="flex items-center justify-between mt-3">
           <button className="text-xs bg-green-500/10 hover:bg-green-500/20 border border-green-500/30 text-green-400 px-3 py-1 rounded-lg transition-colors">
             Get

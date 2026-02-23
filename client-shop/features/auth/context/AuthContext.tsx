@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { AuthService } from "../services/auth.service";
 import type { AuthResponse } from "../types";
 
@@ -19,24 +19,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthResponse["user"] | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-  const pathname = usePathname();
 
   useEffect(() => {
     const initAuth = async () => {
       let currentUser = AuthService.getCurrentUser();
-
       if (!currentUser) {
         try {
           currentUser = await AuthService.fetchCurrentUser();
-        } catch {
-
-        }
+        } catch {}
       }
-
       setUser(currentUser);
       setLoading(false);
     };
-
     initAuth();
   }, []);
 
@@ -55,15 +49,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        isAuthenticated: !!user,
-        loading,
-        refreshUser,
-        logout
-      }}
-    >
+    <AuthContext.Provider value={{ user, isAuthenticated: !!user, loading, refreshUser, logout }}>
       {children}
     </AuthContext.Provider>
   );
@@ -71,8 +57,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 export function useAuthContext() {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuthContext must be used within AuthProvider");
-  }
+  if (!context) throw new Error("useAuthContext must be used within AuthProvider");
   return context;
 }
