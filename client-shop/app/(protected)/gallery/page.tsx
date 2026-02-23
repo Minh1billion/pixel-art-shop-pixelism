@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState, useEffect, useCallback } from "react";
 import { useSpriteFilter } from "@/features/sprite/hooks/useSpriteFilter";
 import { usePagination } from "@/features/sprite/hooks/usePagination";
@@ -44,7 +45,6 @@ export default function GalleryPage() {
         resetPage();
     }, [filter, tab, selectedUser, resetPage]);
 
-    // Fix: gộp setSelectedUser vào handler thay vì dùng effect
     const handleTabChange = useCallback((nextTab: Tab) => {
         setTab(nextTab);
         if (nextTab !== "byUser") setSelectedUser(null);
@@ -80,21 +80,19 @@ export default function GalleryPage() {
                         <>
                             <button
                                 onClick={() => handleTabChange("all")}
-                                className={`px-4 py-1.5 rounded-lg text-sm transition-all ${
-                                    tab === "all"
+                                className={`px-4 py-1.5 rounded-lg text-sm transition-all ${tab === "all"
                                         ? "bg-green-500/20 text-green-300 border border-green-500/30"
                                         : "text-gray-400 hover:text-white"
-                                }`}
+                                    }`}
                             >
                                 All Sprites
                             </button>
                             <button
                                 onClick={() => handleTabChange("byUser")}
-                                className={`px-4 py-1.5 rounded-lg text-sm transition-all ${
-                                    tab === "byUser"
+                                className={`px-4 py-1.5 rounded-lg text-sm transition-all ${tab === "byUser"
                                         ? "bg-yellow-500/20 text-yellow-300 border border-yellow-500/30"
                                         : "text-gray-400 hover:text-white"
-                                }`}
+                                    }`}
                             >
                                 By User
                             </button>
@@ -102,11 +100,10 @@ export default function GalleryPage() {
                     ) : (
                         <button
                             onClick={() => handleTabChange("mine")}
-                            className={`px-4 py-1.5 rounded-lg text-sm transition-all ${
-                                tab === "mine"
+                            className={`px-4 py-1.5 rounded-lg text-sm transition-all ${tab === "mine"
                                     ? "bg-green-500/20 text-green-300 border border-green-500/30"
                                     : "text-gray-400 hover:text-white"
-                            }`}
+                                }`}
                         >
                             My Sprites
                         </button>
@@ -135,13 +132,12 @@ export default function GalleryPage() {
                                         <button
                                             key={u.id}
                                             onClick={() => setSelectedUser(u)}
-                                            className={`w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-white/5 ${
-                                                selectedUser?.id === u.id ? "bg-green-500/10" : ""
-                                            }`}
+                                            className={`w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-white/5 ${selectedUser?.id === u.id ? "bg-green-500/10" : ""
+                                                }`}
                                         >
-                                            <div className="w-7 h-7 rounded-full bg-neutral-800 shrink-0 flex items-center justify-center text-xs font-semibold text-green-400 overflow-hidden">
+                                            <div className="w-7 h-7 rounded-full bg-neutral-800 shrink-0 flex items-center justify-center text-xs font-semibold text-green-400 overflow-hidden relative">
                                                 {u.avatarUrl
-                                                    ? <img src={u.avatarUrl} alt={u.username} className="w-full h-full object-cover" />
+                                                    ? <Image src={u.avatarUrl} alt={u.username} fill className="object-cover" />
                                                     : u.username.charAt(0).toUpperCase()
                                                 }
                                             </div>
