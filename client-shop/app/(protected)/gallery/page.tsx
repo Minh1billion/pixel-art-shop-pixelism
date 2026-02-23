@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSpriteFilter } from "@/features/sprite/hooks/useSpriteFilter";
 import { usePagination } from "@/features/sprite/hooks/usePagination";
 import { useSprites } from "@/features/sprite/hooks/useSprites";
@@ -44,9 +44,11 @@ export default function GalleryPage() {
         resetPage();
     }, [filter, tab, selectedUser, resetPage]);
 
-    useEffect(() => {
-        if (tab !== "byUser") setSelectedUser(null);
-    }, [tab]);
+    // Fix: gộp setSelectedUser vào handler thay vì dùng effect
+    const handleTabChange = useCallback((nextTab: Tab) => {
+        setTab(nextTab);
+        if (nextTab !== "byUser") setSelectedUser(null);
+    }, []);
 
     const openCreate = () => { setEditingSprite(null); setModalOpen(true); };
     const openEdit = (sprite: SpriteListResponse) => { setEditingSprite(sprite); setModalOpen(true); };
@@ -73,12 +75,11 @@ export default function GalleryPage() {
                     </button>
                 </div>
 
-                {/* Tabs */}
                 <div className="flex items-center gap-1 bg-neutral-900 border border-green-900/20 rounded-xl p-1 w-fit mb-8">
                     {isAdmin ? (
                         <>
                             <button
-                                onClick={() => setTab("all")}
+                                onClick={() => handleTabChange("all")}
                                 className={`px-4 py-1.5 rounded-lg text-sm transition-all ${
                                     tab === "all"
                                         ? "bg-green-500/20 text-green-300 border border-green-500/30"
@@ -88,7 +89,7 @@ export default function GalleryPage() {
                                 All Sprites
                             </button>
                             <button
-                                onClick={() => setTab("byUser")}
+                                onClick={() => handleTabChange("byUser")}
                                 className={`px-4 py-1.5 rounded-lg text-sm transition-all ${
                                     tab === "byUser"
                                         ? "bg-yellow-500/20 text-yellow-300 border border-yellow-500/30"
@@ -100,7 +101,7 @@ export default function GalleryPage() {
                         </>
                     ) : (
                         <button
-                            onClick={() => setTab("mine")}
+                            onClick={() => handleTabChange("mine")}
                             className={`px-4 py-1.5 rounded-lg text-sm transition-all ${
                                 tab === "mine"
                                     ? "bg-green-500/20 text-green-300 border border-green-500/30"

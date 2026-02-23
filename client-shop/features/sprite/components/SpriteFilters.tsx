@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import type { SpriteFilterRequest } from "@/features/sprite/types";
 import type { CategoryResponse } from "@/features/sprite/types";
 
