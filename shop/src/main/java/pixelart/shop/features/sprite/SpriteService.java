@@ -20,6 +20,20 @@ public interface SpriteService {
             int size
     );
 
+    Page<SpriteListResponse> getByUser(
+            SpriteFilterRequest filter,
+            int page,
+            int size,
+            User currentUser
+    );
+
+    Page<SpriteListResponse> getByUserId(
+            SpriteFilterRequest filter,
+            int page,
+            int size,
+            UUID userId
+    );
+
     SpriteResponse getById(UUID id);
 
     SpriteResponse create(

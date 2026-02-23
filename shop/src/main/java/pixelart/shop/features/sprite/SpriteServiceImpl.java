@@ -20,6 +20,7 @@ import pixelart.shop.features.sprite.entity.Sprite;
 import pixelart.shop.features.sprite.repository.SpriteRepository;
 import pixelart.shop.features.sprite.repository.SpriteSpecification;
 import pixelart.shop.features.user.entity.User;
+import pixelart.shop.features.user.repository.UserRepository;
 import pixelart.shop.shared.exception.AppException;
 import pixelart.shop.shared.infrastructure.storage.FileStorage;
 import pixelart.shop.shared.infrastructure.storage.UploadResult;
@@ -34,6 +35,7 @@ import java.util.UUID;
 @Transactional
 public class SpriteServiceImpl implements SpriteService {
 
+    private final UserRepository userRepository;
     private final SpriteRepository spriteRepository;
     private final CategoryRepository categoryRepository;
     private final FileStorage fileStorage;
@@ -41,22 +43,27 @@ public class SpriteServiceImpl implements SpriteService {
     @Override
     @Transactional(readOnly = true)
     public Page<SpriteListResponse> getAll(SpriteFilterRequest filter, int page, int size) {
-        Sort sort = Sort.unsorted();
+        Pageable pageable = buildPageable(filter, page, size);
+        Specification<Sprite> spec = SpriteSpecification.filter(filter.categoryIds(), filter.keyword(), null);
+        return spriteRepository.findAll(spec, pageable).map(SpriteListResponse::from);
+    }
 
-        if (filter.sortBy() != null && !filter.sortBy().isBlank()) {
-            Sort.Direction direction = "desc".equalsIgnoreCase(filter.sortOrder())
-                    ? Sort.Direction.DESC
-                    : Sort.Direction.ASC;
-            sort = Sort.by(direction, filter.sortBy());
-        }
+    @Override
+    @Transactional(readOnly = true)
+    public Page<SpriteListResponse> getByUser(SpriteFilterRequest filter, int page, int size, User currentUser) {
+        Pageable pageable = buildPageable(filter, page, size);
+        Specification<Sprite> spec = SpriteSpecification.filter(filter.categoryIds(), filter.keyword(), currentUser);
+        return spriteRepository.findAll(spec, pageable).map(SpriteListResponse::from);
+    }
 
-        Pageable pageable = PageRequest.of(page, size, sort);
+    @Override
+    @Transactional(readOnly = true)
+    public Page<SpriteListResponse> getByUserId(SpriteFilterRequest filter, int page, int size, UUID userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> AppException.notFound("User does not exist"));
 
-        Specification<Sprite> spec = SpriteSpecification.filter(
-                filter.categoryIds(),
-                filter.keyword()
-        );
-
+        Pageable pageable = buildPageable(filter, page, size);
+        Specification<Sprite> spec = SpriteSpecification.filter(filter.categoryIds(), filter.keyword(), user);
         return spriteRepository.findAll(spec, pageable).map(SpriteListResponse::from);
     }
 
@@ -172,6 +179,16 @@ public class SpriteServiceImpl implements SpriteService {
         } catch (IOException e) {
             log.warn("Unable to delete image ({}): {}", publicId, e.getMessage());
         }
+    }
+
+    private Pageable buildPageable(SpriteFilterRequest filter, int page, int size) {
+        Sort sort = Sort.unsorted();
+        if (filter.sortBy() != null && !filter.sortBy().isBlank()) {
+            Sort.Direction direction = "desc".equalsIgnoreCase(filter.sortOrder())
+                    ? Sort.Direction.DESC : Sort.Direction.ASC;
+            sort = Sort.by(direction, filter.sortBy());
+        }
+        return PageRequest.of(page, size, sort);
     }
 
     private String generateUniqueSlug(String name) {

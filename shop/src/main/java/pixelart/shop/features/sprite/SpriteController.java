@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -29,10 +30,42 @@ public class SpriteController {
             SpriteFilterRequest filter,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "12") int size
+
     ) {
 
         Page<SpriteListResponse> result =
                 spriteService.getAll(filter, page, size);
+
+        return ResponseEntity.ok(
+                ApiResponse.success(result)
+        );
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<ApiResponse<Page<SpriteListResponse>>> getMySprites(
+            SpriteFilterRequest filter,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size,
+            @AuthenticationPrincipal User currentUser
+    ) {
+        Page<SpriteListResponse> result =
+                spriteService.getByUser(filter, page, size, currentUser);
+
+        return ResponseEntity.ok(
+                ApiResponse.success(result)
+        );
+    }
+
+    @GetMapping("/user/{userId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<Page<SpriteListResponse>>> getSpritesByUser(
+            SpriteFilterRequest filter,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size,
+            @PathVariable UUID userId
+    ) {
+        Page<SpriteListResponse> result =
+                spriteService.getByUserId(filter, page, size, userId);
 
         return ResponseEntity.ok(
                 ApiResponse.success(result)
