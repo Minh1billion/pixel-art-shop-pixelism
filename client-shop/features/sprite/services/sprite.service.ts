@@ -60,6 +60,22 @@ export class SpriteService {
         }
     }
 
+    static async getTrash(
+        page = 0,
+        size = 20
+    ): Promise<PageResponse<SpriteListResponse>> {
+        try {
+            const response = await api.get<ApiResponse<PageResponse<SpriteListResponse>>>(
+                "/sprites/trash",
+                { params: { page, size } }
+            );
+            if (!response.data.success) throw new Error(response.data.message);
+            return response.data.data;
+        } catch (error: any) {
+            throw new Error(error.response?.data?.message ?? error.message);
+        }
+    }
+
     static async getById(id: string): Promise<SpriteResponse> {
         try {
             const response = await api.get<ApiResponse<SpriteResponse>>(`/sprites/${id}`);
@@ -109,6 +125,25 @@ export class SpriteService {
         }
     }
 
+    static async restoreById(id: string): Promise<SpriteResponse> {
+        try {
+            const response = await api.post<ApiResponse<SpriteResponse>>(`/sprites/${id}/restore`);
+            if (!response.data.success) throw new Error(response.data.message);
+            return response.data.data;
+        } catch (error: any) {
+            throw new Error(error.response?.data?.message ?? error.message);
+        }
+    }
+
+    static async hardDeleteById(id: string): Promise<void> {
+        try {
+            const response = await api.delete<ApiResponse<null>>(`/sprites/${id}/permanent`);
+            if (!response.data.success) throw new Error(response.data.message);
+        } catch (error: any) {
+            throw new Error(error.response?.data?.message ?? error.message);
+        }
+    }
+
     private static buildFormData(data: SpriteRequest, image?: File): FormData {
         const formData = new FormData();
         formData.append(
@@ -118,5 +153,4 @@ export class SpriteService {
         if (image) formData.append("image", image);
         return formData;
     }
-
 }

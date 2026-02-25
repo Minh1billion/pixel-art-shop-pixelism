@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useState, useEffect, useCallback } from "react";
+import { HiOutlineTrash } from "react-icons/hi2";
 import { useSpriteFilter } from "@/features/sprite/hooks/useSpriteFilter";
 import { usePagination } from "@/features/sprite/hooks/usePagination";
 import { useSprites } from "@/features/sprite/hooks/useSprites";
@@ -10,10 +11,12 @@ import { useSpritesByUser } from "@/features/sprite/hooks/useSpritesByUser";
 import { useCategories } from "@/features/sprite/hooks/useCategories";
 import { useUsers } from "@/features/user/hooks/useUsers";
 import { useAuth } from "@/features/auth/hooks/useAuth";
+import { SpriteService } from "@/features/sprite/services/sprite.service";
 import SpriteFilters from "@/features/sprite/components/SpriteFilters";
 import SpriteGrid from "@/features/sprite/components/SpriteGrid";
 import Pagination from "@/features/sprite/components/Pagination";
 import SavingSpriteForm from "@/features/sprite/components/SavingSpriteForm";
+import TrashPanel from "@/features/sprite/components/TrashPanel";
 import type { SpriteListResponse } from "@/features/sprite/types";
 import type { UserListResponse } from "@/features/user/types";
 
@@ -26,9 +29,10 @@ export default function GalleryPage() {
     const [tab, setTab] = useState<Tab>(isAdmin ? "all" : "mine");
     const [selectedUser, setSelectedUser] = useState<UserListResponse | null>(null);
     const [userKeyword, setUserKeyword] = useState("");
+    const [trashOpen, setTrashOpen] = useState(false);
 
     const { filter, updateFilter, resetFilter, toggleCategory } = useSpriteFilter();
-    const { page, size, goToPage, reset: resetPage } = usePagination(0, 12);
+    const { page, size, goToPage, reset: resetPage } = usePagination(0, 42);
     const { data: categories } = useCategories();
 
     const allSprites = useSprites(filter, page, size);
@@ -54,9 +58,28 @@ export default function GalleryPage() {
     const openEdit = (sprite: SpriteListResponse) => { setEditingSprite(sprite); setModalOpen(true); };
     const handleClose = () => { setModalOpen(false); setEditingSprite(null); };
 
+    const handleDelete = async (sprite: SpriteListResponse) => {
+        try {
+            await SpriteService.deleteById(sprite.id);
+            // Refresh active tab
+            if (tab === "mine") mySprites.refresh();
+            else if (tab === "all") allSprites.refresh();
+            else userSprites.refresh();
+        } catch (e: any) {
+            alert(e.message);
+        }
+    };
+
+    const handleRestored = () => {
+        // Khi restore từ trash, refresh grid hiện tại
+        if (tab === "mine") mySprites.refresh();
+        else if (tab === "all") allSprites.refresh();
+        else userSprites.refresh();
+    };
+
     return (
         <div className="min-h-screen bg-neutral-950 text-white">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+            <div className="w-full px-4 sm:px-6 lg:px-8 py-10">
 
                 <div className="mb-8 flex items-start justify-between gap-4">
                     <div>
@@ -67,12 +90,22 @@ export default function GalleryPage() {
                             {isAdmin ? "Manage and browse all sprites" : "Browse and manage your sprites"}
                         </p>
                     </div>
-                    <button
-                        onClick={openCreate}
-                        className="shrink-0 px-4 py-2 rounded-lg text-sm font-medium bg-green-500 hover:bg-green-400 text-black transition-colors"
-                    >
-                        + Upload Sprite
-                    </button>
+                    <div className="flex items-center gap-2 shrink-0">
+                        {/* Trash button */}
+                        <button
+                            onClick={() => setTrashOpen(true)}
+                            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm border border-neutral-800 text-gray-500 hover:text-red-400 hover:border-red-500/30 hover:bg-red-500/5 transition-all"
+                        >
+                            <HiOutlineTrash className="w-4 h-4" />
+                            <span className="hidden sm:inline">Trash</span>
+                        </button>
+                        <button
+                            onClick={openCreate}
+                            className="px-4 py-2 rounded-lg text-sm font-medium bg-green-500 hover:bg-green-400 text-black transition-colors"
+                        >
+                            + Upload Sprite
+                        </button>
+                    </div>
                 </div>
 
                 <div className="flex items-center gap-1 bg-neutral-900 border border-green-900/20 rounded-xl p-1 w-fit mb-8">
@@ -81,18 +114,16 @@ export default function GalleryPage() {
                             <button
                                 onClick={() => handleTabChange("all")}
                                 className={`px-4 py-1.5 rounded-lg text-sm transition-all ${tab === "all"
-                                        ? "bg-green-500/20 text-green-300 border border-green-500/30"
-                                        : "text-gray-400 hover:text-white"
-                                    }`}
+                                    ? "bg-green-500/20 text-green-300 border border-green-500/30"
+                                    : "text-gray-400 hover:text-white"}`}
                             >
                                 All Sprites
                             </button>
                             <button
                                 onClick={() => handleTabChange("byUser")}
                                 className={`px-4 py-1.5 rounded-lg text-sm transition-all ${tab === "byUser"
-                                        ? "bg-yellow-500/20 text-yellow-300 border border-yellow-500/30"
-                                        : "text-gray-400 hover:text-white"
-                                    }`}
+                                    ? "bg-yellow-500/20 text-yellow-300 border border-yellow-500/30"
+                                    : "text-gray-400 hover:text-white"}`}
                             >
                                 By User
                             </button>
@@ -101,19 +132,19 @@ export default function GalleryPage() {
                         <button
                             onClick={() => handleTabChange("mine")}
                             className={`px-4 py-1.5 rounded-lg text-sm transition-all ${tab === "mine"
-                                    ? "bg-green-500/20 text-green-300 border border-green-500/30"
-                                    : "text-gray-400 hover:text-white"
-                                }`}
+                                ? "bg-green-500/20 text-green-300 border border-green-500/30"
+                                : "text-gray-400 hover:text-white"}`}
                         >
                             My Sprites
                         </button>
                     )}
                 </div>
 
-                <div className="flex flex-col lg:flex-row gap-8">
-                    <div className="lg:w-56 xl:w-64 shrink-0 space-y-6">
+                <div className="flex flex-col lg:flex-row gap-6">
+                    {/* Sidebar */}
+                    <div className="lg:w-60 xl:w-64 shrink-0 self-start sticky top-22">
                         {tab === "byUser" && isAdmin && (
-                            <div className="space-y-2">
+                            <div className="space-y-2 mb-4">
                                 <label className="text-xs text-gray-500 uppercase tracking-wider">
                                     Select User
                                 </label>
@@ -132,8 +163,7 @@ export default function GalleryPage() {
                                         <button
                                             key={u.id}
                                             onClick={() => setSelectedUser(u)}
-                                            className={`w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-white/5 ${selectedUser?.id === u.id ? "bg-green-500/10" : ""
-                                                }`}
+                                            className={`w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-white/5 ${selectedUser?.id === u.id ? "bg-green-500/10" : ""}`}
                                         >
                                             <div className="w-7 h-7 rounded-full bg-neutral-800 shrink-0 flex items-center justify-center text-xs font-semibold text-green-400 overflow-hidden relative">
                                                 {u.avatarUrl
@@ -173,6 +203,7 @@ export default function GalleryPage() {
                         />
                     </div>
 
+                    {/* Main content */}
                     <div className="flex-1 min-w-0 space-y-6">
                         {tab === "byUser" && !selectedUser ? (
                             <div className="flex flex-col items-center justify-center py-24 text-center">
@@ -199,6 +230,7 @@ export default function GalleryPage() {
                                     loading={active.loading}
                                     error={active.error}
                                     onEdit={tab === "mine" ? openEdit : undefined}
+                                    onDelete={tab === "mine" || isAdmin ? handleDelete : undefined}
                                 />
 
                                 {active.data && (
@@ -221,6 +253,12 @@ export default function GalleryPage() {
                 editingSprite={editingSprite}
                 onClose={handleClose}
                 onSaved={tab === "mine" ? mySprites.refresh : allSprites.refresh}
+            />
+
+            <TrashPanel
+                open={trashOpen}
+                onClose={() => setTrashOpen(false)}
+                onRestored={handleRestored}
             />
         </div>
     );

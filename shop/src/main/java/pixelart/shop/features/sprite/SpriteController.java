@@ -30,15 +30,10 @@ public class SpriteController {
             SpriteFilterRequest filter,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "12") int size
-
     ) {
-
-        Page<SpriteListResponse> result =
-                spriteService.getAll(filter, page, size);
-
-        return ResponseEntity.ok(
-                ApiResponse.success(result)
-        );
+        return ResponseEntity.ok(ApiResponse.success(
+                spriteService.getAll(filter, page, size)
+        ));
     }
 
     @GetMapping("/me")
@@ -48,12 +43,9 @@ public class SpriteController {
             @RequestParam(defaultValue = "12") int size,
             @AuthenticationPrincipal User currentUser
     ) {
-        Page<SpriteListResponse> result =
-                spriteService.getByUser(filter, page, size, currentUser);
-
-        return ResponseEntity.ok(
-                ApiResponse.success(result)
-        );
+        return ResponseEntity.ok(ApiResponse.success(
+                spriteService.getByUser(filter, page, size, currentUser)
+        ));
     }
 
     @GetMapping("/user/{userId}")
@@ -64,95 +56,66 @@ public class SpriteController {
             @RequestParam(defaultValue = "12") int size,
             @PathVariable UUID userId
     ) {
-        Page<SpriteListResponse> result =
-                spriteService.getByUserId(filter, page, size, userId);
+        return ResponseEntity.ok(ApiResponse.success(
+                spriteService.getByUserId(filter, page, size, userId)
+        ));
+    }
 
-        return ResponseEntity.ok(
-                ApiResponse.success(result)
-        );
+    @GetMapping("/trash")
+    public ResponseEntity<ApiResponse<Page<SpriteListResponse>>> getTrash(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @AuthenticationPrincipal User currentUser
+    ) {
+        boolean isAdmin = currentUser.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        return ResponseEntity.ok(ApiResponse.success(
+                spriteService.getTrash(page, size, currentUser, isAdmin)
+        ));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<SpriteResponse>> getById(
-            @PathVariable UUID id
-    ) {
-
-        return ResponseEntity.ok(
-                ApiResponse.success(
-                        spriteService.getById(id)
-                )
-        );
+    public ResponseEntity<ApiResponse<SpriteResponse>> getById(@PathVariable UUID id) {
+        return ResponseEntity.ok(ApiResponse.success(spriteService.getById(id)));
     }
 
-    @PostMapping(
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
-    )
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<SpriteResponse>> create(
             @RequestPart("data") SpriteRequest request,
             @RequestPart("image") MultipartFile image,
             @AuthenticationPrincipal User currentUser
     ) throws IOException {
-
-        SpriteResponse response =
-                spriteService.create(request, image, currentUser);
-
-        return ResponseEntity.ok(
-                ApiResponse.success(response)
-        );
+        return ResponseEntity.ok(ApiResponse.success(
+                spriteService.create(request, image, currentUser)
+        ));
     }
 
-    @PutMapping(
-            value = "/{id}",
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
-    )
+    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<SpriteResponse>> update(
             @PathVariable UUID id,
             @RequestPart("data") SpriteRequest request,
-            @RequestPart(value = "image", required = false)
-            MultipartFile image
+            @RequestPart(value = "image", required = false) MultipartFile image
     ) throws IOException {
-
-        SpriteResponse response =
-                spriteService.update(id, request, image);
-
-        return ResponseEntity.ok(
-                ApiResponse.success(response)
-        );
+        return ResponseEntity.ok(ApiResponse.success(
+                spriteService.update(id, request, image)
+        ));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Void>> delete(
-            @PathVariable UUID id
-    ) throws IOException {
-
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable UUID id) throws IOException {
         spriteService.delete(id);
-
-        return ResponseEntity.ok(
-                ApiResponse.success(null)
-        );
+        return ResponseEntity.ok(ApiResponse.success(null));
     }
 
     @PostMapping("/{id}/restore")
-    public ResponseEntity<ApiResponse<SpriteResponse>> restore(
-            @PathVariable UUID id
-    ) {
-
-        SpriteResponse response = spriteService.restore(id);
-
-        return ResponseEntity.ok(
-                ApiResponse.success(response)
-        );
+    public ResponseEntity<ApiResponse<SpriteResponse>> restore(@PathVariable UUID id) {
+        return ResponseEntity.ok(ApiResponse.success(spriteService.restore(id)));
     }
-
+    
     @DeleteMapping("/{id}/permanent")
-    public ResponseEntity<ApiResponse<Void>> permanentDelete(
-            @PathVariable UUID id
-    ) throws IOException {
-
+    public ResponseEntity<ApiResponse<Void>> permanentDelete(@PathVariable UUID id) throws IOException {
         spriteService.hardDelete(id);
-
-        return ResponseEntity.ok(
-                ApiResponse.success(null)
-        );
+        return ResponseEntity.ok(ApiResponse.success(null));
     }
 }

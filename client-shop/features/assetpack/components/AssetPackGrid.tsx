@@ -70,8 +70,8 @@ export default function AssetPackGrid({ packs, loading, error }: AssetPackGridPr
             <div>
                 {toolbar}
                 {view === "grid" ? (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
-                        {Array.from({ length: 12 }).map((_, i) => (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
+                        {Array.from({ length: 40 }).map((_, i) => (
                             <div
                                 key={i}
                                 className="bg-neutral-900 border border-green-900/10 rounded-2xl overflow-hidden animate-pulse"
@@ -87,7 +87,7 @@ export default function AssetPackGrid({ packs, loading, error }: AssetPackGridPr
                     </div>
                 ) : (
                     <div className="flex flex-col gap-2">
-                        {Array.from({ length: 8 }).map((_, i) => (
+                        {Array.from({ length: 40 }).map((_, i) => (
                             <div
                                 key={i}
                                 className="flex items-center gap-4 bg-neutral-900 border border-green-900/10 rounded-2xl p-3 animate-pulse"
@@ -134,7 +134,7 @@ export default function AssetPackGrid({ packs, loading, error }: AssetPackGridPr
         <div>
             {toolbar}
             {view === "grid" ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
                     {packs.map((pack) => (
                         <AssetPackCard key={pack.id} pack={pack} view="grid" />
                     ))}

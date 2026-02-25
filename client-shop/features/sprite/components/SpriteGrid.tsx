@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { HiOutlineSquares2X2, HiOutlineBars3 } from "react-icons/hi2";
 import SpriteCard from "./SpriteCard";
 import type { SpriteListResponse } from "@/features/sprite/types";
 
@@ -11,38 +12,10 @@ interface SpriteGridProps {
   loading: boolean;
   error: string | null;
   onEdit?: (sprite: SpriteListResponse) => void;
+  onDelete?: (sprite: SpriteListResponse) => void;
 }
 
-function GridIcon({ active }: { active: boolean }) {
-  return (
-    <svg
-      className={`w-4 h-4 transition-colors ${active ? "text-green-400" : "text-gray-500"}`}
-      fill="currentColor"
-      viewBox="0 0 16 16"
-    >
-      <rect x="1" y="1" width="6" height="6" rx="1" />
-      <rect x="9" y="1" width="6" height="6" rx="1" />
-      <rect x="1" y="9" width="6" height="6" rx="1" />
-      <rect x="9" y="9" width="6" height="6" rx="1" />
-    </svg>
-  );
-}
-
-function ListIcon({ active }: { active: boolean }) {
-  return (
-    <svg
-      className={`w-4 h-4 transition-colors ${active ? "text-green-400" : "text-gray-500"}`}
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      viewBox="0 0 24 24"
-    >
-      <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-    </svg>
-  );
-}
-
-export default function SpriteGrid({ sprites, loading, error, onEdit }: SpriteGridProps) {
+export default function SpriteGrid({ sprites, loading, error, onEdit, onDelete }: SpriteGridProps) {
   const [view, setView] = useState<ViewMode>("grid");
 
   const toolbar = (
@@ -50,21 +23,17 @@ export default function SpriteGrid({ sprites, loading, error, onEdit }: SpriteGr
       <div className="flex items-center gap-1 bg-neutral-900 border border-green-900/20 rounded-lg p-1">
         <button
           onClick={() => setView("grid")}
-          className={`p-1.5 rounded-md transition-all ${
-            view === "grid" ? "bg-green-500/20" : "hover:bg-white/5"
-          }`}
+          className={`p-1.5 rounded-md transition-all ${view === "grid" ? "bg-green-500/20" : "hover:bg-white/5"}`}
           aria-label="Grid view"
         >
-          <GridIcon active={view === "grid"} />
+          <HiOutlineSquares2X2 className={`w-4 h-4 transition-colors ${view === "grid" ? "text-green-400" : "text-gray-500"}`} />
         </button>
         <button
           onClick={() => setView("list")}
-          className={`p-1.5 rounded-md transition-all ${
-            view === "list" ? "bg-green-500/20" : "hover:bg-white/5"
-          }`}
+          className={`p-1.5 rounded-md transition-all ${view === "list" ? "bg-green-500/20" : "hover:bg-white/5"}`}
           aria-label="List view"
         >
-          <ListIcon active={view === "list"} />
+          <HiOutlineBars3 className={`w-4 h-4 transition-colors ${view === "list" ? "text-green-400" : "text-gray-500"}`} />
         </button>
       </div>
     </div>
@@ -75,12 +44,9 @@ export default function SpriteGrid({ sprites, loading, error, onEdit }: SpriteGr
       <div>
         {toolbar}
         {view === "grid" ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
-            {Array.from({ length: 12 }).map((_, i) => (
-              <div
-                key={i}
-                className="bg-neutral-900 border border-green-900/10 rounded-2xl overflow-hidden animate-pulse"
-              >
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
+            {Array.from({ length: 40 }).map((_, i) => (
+              <div key={i} className="bg-neutral-900 border border-green-900/10 rounded-2xl overflow-hidden animate-pulse">
                 <div className="aspect-square bg-neutral-800" />
                 <div className="p-4 space-y-2">
                   <div className="h-3 bg-neutral-800 rounded w-3/4" />
@@ -92,11 +58,8 @@ export default function SpriteGrid({ sprites, loading, error, onEdit }: SpriteGr
           </div>
         ) : (
           <div className="flex flex-col gap-2">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div
-                key={i}
-                className="flex items-center gap-4 bg-neutral-900 border border-green-900/10 rounded-2xl p-3 animate-pulse"
-              >
+            {Array.from({ length: 40 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-4 bg-neutral-900 border border-green-900/10 rounded-2xl p-3 animate-pulse">
                 <div className="w-16 h-16 rounded-xl bg-neutral-800 shrink-0" />
                 <div className="flex-1 space-y-2">
                   <div className="h-3 bg-neutral-800 rounded w-1/3" />
@@ -139,15 +102,15 @@ export default function SpriteGrid({ sprites, loading, error, onEdit }: SpriteGr
     <div>
       {toolbar}
       {view === "grid" ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
           {sprites.map((sprite) => (
-            <SpriteCard key={sprite.id} sprite={sprite} view="grid" onEdit={onEdit} />
+            <SpriteCard key={sprite.id} sprite={sprite} view="grid" onEdit={onEdit} onDelete={onDelete} />
           ))}
         </div>
       ) : (
         <div className="flex flex-col gap-2">
           {sprites.map((sprite) => (
-            <SpriteCard key={sprite.id} sprite={sprite} view="list" onEdit={onEdit} />
+            <SpriteCard key={sprite.id} sprite={sprite} view="list" onEdit={onEdit} onDelete={onDelete} />
           ))}
         </div>
       )}

@@ -33,13 +33,6 @@ public class Sprite {
     @Column(unique = true, nullable = false)
     private String slug;
 
-//    @Column(columnDefinition = "TEXT")
-//    private String description;
-//
-//    @Column(nullable = false, precision = 10, scale = 2)
-//    @Builder.Default
-//    private BigDecimal price = BigDecimal.ZERO;
-
     @Column(nullable = false, length = 500)
     private String imageUrl;
 

@@ -9,9 +9,9 @@ import AssetPackFilters from "@/features/assetpack/components/AssetPackFilters";
 import AssetPackGrid from "@/features/assetpack/components/AssetPackGrid";
 import Pagination from "@/features/sprite/components/Pagination";
 
-export default function AssetPackPage() {
+export default function StorePage() {
     const { filter, updateFilter, resetFilter, toggleCategory } = useAssetPackFilter();
-    const { page, size, goToPage, reset: resetPage } = usePagination(0, 12);
+    const { page, size, goToPage, reset: resetPage } = usePagination(0, 42);
     const { data, loading, error } = useAssetPacks(filter, page, size);
     const { data: categories } = useCategories();
 
@@ -21,7 +21,7 @@ export default function AssetPackPage() {
 
     return (
         <div className="min-h-screen bg-neutral-950 text-white">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+            <div className="w-full px-4 sm:px-6 lg:px-8 py-10">
                 <div className="mb-8">
                     <h1 className="text-2xl font-bold text-white tracking-tight">
                         Asset Pack <span className="text-green-400">Store</span>
@@ -31,8 +31,8 @@ export default function AssetPackPage() {
                     </p>
                 </div>
 
-                <div className="flex flex-col lg:flex-row gap-8">
-                    <div className="lg:w-56 xl:w-64 shrink-0">
+                <div className="flex flex-col lg:flex-row gap-6">
+                    <div className="lg:w-60 xl:w-64 shrink-0 self-start sticky top-22">
                         <AssetPackFilters
                             filter={filter}
                             categories={categories}
@@ -42,7 +42,7 @@ export default function AssetPackPage() {
                         />
                     </div>
 
-                    <div className="flex-1 min-w-0 space-y-6">
+                    <div className="flex-1 min-w-0 space-y-6 min-h-screen">
                         {data && !loading && (
                             <p className="text-xs text-gray-500">
                                 {data.totalElements} pack{data.totalElements !== 1 ? "s" : ""} found

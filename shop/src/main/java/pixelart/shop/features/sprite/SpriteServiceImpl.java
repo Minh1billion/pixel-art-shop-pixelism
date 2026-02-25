@@ -69,6 +69,16 @@ public class SpriteServiceImpl implements SpriteService {
 
     @Override
     @Transactional(readOnly = true)
+    public Page<SpriteListResponse> getTrash(int page, int size, User currentUser, boolean isAdmin) {
+        // ADMIN thấy tất cả inactive, user thường chỉ thấy của mình
+        User filterUser = isAdmin ? null : currentUser;
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "updatedAt"));
+        Specification<Sprite> spec = SpriteSpecification.trash(filterUser);
+        return spriteRepository.findAll(spec, pageable).map(SpriteListResponse::from);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public SpriteResponse getById(UUID id) {
         return spriteRepository
                 .findWithDetailsById(id)
@@ -101,7 +111,6 @@ public class SpriteServiceImpl implements SpriteService {
 
     @Override
     public SpriteResponse update(UUID id, SpriteRequest request, MultipartFile image) throws IOException {
-        // Dùng findWithDetailsById để tránh lazy load createdBy sau này
         Sprite sprite = spriteRepository
                 .findWithDetailsById(id)
                 .orElseThrow(() -> AppException.notFound("Sprite does not exist"));
@@ -116,7 +125,6 @@ public class SpriteServiceImpl implements SpriteService {
             if (sprite.getCloudinaryId() != null) {
                 deleteImage(sprite.getCloudinaryId());
             }
-
             UploadResult uploadResult = uploadImage(image);
             sprite.setImageUrl(uploadResult.url());
             sprite.setCloudinaryId(uploadResult.publicId());
@@ -144,6 +152,10 @@ public class SpriteServiceImpl implements SpriteService {
                 .findById(id)
                 .orElseThrow(() -> AppException.notFound("Sprite does not exist"));
 
+        if (sprite.isActive()) {
+            throw AppException.badRequest("Move sprite to trash before permanently deleting");
+        }
+
         if (sprite.getCloudinaryId() != null) {
             deleteImage(sprite.getCloudinaryId());
         }
@@ -158,7 +170,7 @@ public class SpriteServiceImpl implements SpriteService {
                 .orElseThrow(() -> AppException.notFound("Sprite does not exist"));
 
         if (sprite.isActive()) {
-            throw AppException.badRequest("Sprite is not deleted");
+            throw AppException.badRequest("Sprite is not in trash");
         }
 
         sprite.setActive(true);

@@ -5,9 +5,11 @@ import { Footer } from "@/features/shared/components/Footer";
 export default function ProtectedLayout({ children }: { children: React.ReactNode }) {
   return (
     <ProtectedRoute>
-      <div className="flex flex-col min-h-screen bg-neutral-950">
+      <div className="min-h-screen flex flex-col bg-neutral-950">
         <Header />
-        <div className="flex-1">{children}</div>
+        <main className="flex-1">
+          {children}
+        </main>
         <Footer />
       </div>
     </ProtectedRoute>

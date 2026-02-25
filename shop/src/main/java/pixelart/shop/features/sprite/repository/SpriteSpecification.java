@@ -20,6 +20,8 @@ public class SpriteSpecification {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
+            predicates.add(cb.isTrue(root.get("isActive")));
+
             if (createdBy != null) {
                 predicates.add(cb.equal(root.get("createdBy"), createdBy));
             }
@@ -30,6 +32,20 @@ public class SpriteSpecification {
                 Join<Sprite, Category> categoryJoin = root.join("categories", JoinType.INNER);
                 predicates.add(categoryJoin.get("id").in(categoryIds));
                 query.distinct(true);
+            }
+
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+    }
+
+    public static Specification<Sprite> trash(User createdBy) {
+        return (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            predicates.add(cb.isFalse(root.get("isActive")));
+
+            if (createdBy != null) {
+                predicates.add(cb.equal(root.get("createdBy"), createdBy));
             }
 
             return cb.and(predicates.toArray(new Predicate[0]));
