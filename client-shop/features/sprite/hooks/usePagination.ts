@@ -1,13 +1,44 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useCallback, useRef } from "react";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 
 export function usePagination(initialPage = 0, initialSize = 12) {
-    const [page, setPage] = useState(initialPage);
-    const [size] = useState(initialSize);
+    const router = useRouter();
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
 
-    const goToPage = useCallback((p: number) => setPage(p), []);
-    const reset = useCallback(() => setPage(0), []);
+    const page = parseInt(searchParams.get("page") ?? String(initialPage), 10);
+    const size = initialSize;
+
+    const routerRef = useRef(router);
+    const pathnameRef = useRef(pathname);
+    const searchParamsRef = useRef(searchParams);
+    routerRef.current = router;
+    pathnameRef.current = pathname;
+    searchParamsRef.current = searchParams;
+
+    const isMounted = useRef(false);
+
+    const goToPage = useCallback((p: number) => {
+        const params = new URLSearchParams(searchParamsRef.current.toString());
+        if (p === 0) {
+            params.delete("page");
+        } else {
+            params.set("page", String(p));
+        }
+        const qs = params.toString();
+        const url = qs ? `${pathnameRef.current}?${qs}` : pathnameRef.current;
+        routerRef.current.replace(url, { scroll: false });
+    }, []);
+
+    const reset = useCallback(() => {
+        if (!isMounted.current) {
+            isMounted.current = true;
+            return;
+        }
+        goToPage(0);
+    }, [goToPage]);
 
     return { page, size, goToPage, reset };
 }

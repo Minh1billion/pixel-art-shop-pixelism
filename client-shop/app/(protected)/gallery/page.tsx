@@ -61,7 +61,6 @@ export default function GalleryPage() {
     const handleDelete = async (sprite: SpriteListResponse) => {
         try {
             await SpriteService.deleteById(sprite.id);
-            // Refresh active tab
             if (tab === "mine") mySprites.refresh();
             else if (tab === "all") allSprites.refresh();
             else userSprites.refresh();
@@ -71,7 +70,6 @@ export default function GalleryPage() {
     };
 
     const handleRestored = () => {
-        // Khi restore từ trash, refresh grid hiện tại
         if (tab === "mine") mySprites.refresh();
         else if (tab === "all") allSprites.refresh();
         else userSprites.refresh();
@@ -91,7 +89,6 @@ export default function GalleryPage() {
                         </p>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                        {/* Trash button */}
                         <button
                             onClick={() => setTrashOpen(true)}
                             className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm border border-neutral-800 text-gray-500 hover:text-red-400 hover:border-red-500/30 hover:bg-red-500/5 transition-all"
@@ -141,7 +138,6 @@ export default function GalleryPage() {
                 </div>
 
                 <div className="flex flex-col lg:flex-row gap-6">
-                    {/* Sidebar */}
                     <div className="lg:w-60 xl:w-64 shrink-0 self-start sticky top-22">
                         {tab === "byUser" && isAdmin && (
                             <div className="space-y-2 mb-4">
@@ -203,7 +199,6 @@ export default function GalleryPage() {
                         />
                     </div>
 
-                    {/* Main content */}
                     <div className="flex-1 min-w-0 space-y-6">
                         {tab === "byUser" && !selectedUser ? (
                             <div className="flex flex-col items-center justify-center py-24 text-center">

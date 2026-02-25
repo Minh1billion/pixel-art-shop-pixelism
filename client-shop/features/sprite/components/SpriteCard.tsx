@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { HiOutlineTrash } from "react-icons/hi2";
 import type { SpriteListResponse } from "@/features/sprite/types";
 
@@ -13,7 +14,14 @@ interface SpriteCardProps {
 }
 
 export default function SpriteCard({ sprite, view = "grid", onEdit, onDelete }: SpriteCardProps) {
+  const router = useRouter();
   const [confirmDelete, setConfirmDelete] = useState(false);
+
+  if (!sprite) return null;
+
+  const handleCardClick = () => {
+    router.push(`/gallery/${sprite.id}`);
+  };
 
   const handleDeleteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -31,9 +39,17 @@ export default function SpriteCard({ sprite, view = "grid", onEdit, onDelete }: 
     setConfirmDelete(false);
   };
 
+  const handleEdit = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onEdit?.(sprite);
+  };
+
   if (view === "list") {
     return (
-      <div className="group flex items-center gap-4 bg-neutral-900 border border-green-900/20 rounded-2xl overflow-hidden hover:border-green-500/40 transition-all duration-300 hover:shadow-lg hover:shadow-green-900/20 p-3">
+      <div
+        onClick={handleCardClick}
+        className="group flex items-center gap-4 bg-neutral-900 border border-green-900/20 rounded-2xl overflow-hidden hover:border-green-500/40 transition-all duration-300 hover:shadow-lg hover:shadow-green-900/20 p-3 cursor-pointer"
+      >
         <div
           className="shrink-0 w-16 h-16 rounded-xl overflow-hidden relative"
           style={{
@@ -63,7 +79,7 @@ export default function SpriteCard({ sprite, view = "grid", onEdit, onDelete }: 
         <div className="shrink-0 flex items-center gap-2">
           {onEdit && (
             <button
-              onClick={() => onEdit(sprite)}
+              onClick={handleEdit}
               className="text-xs bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 text-gray-400 hover:text-white px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap"
             >
               Edit
@@ -95,7 +111,10 @@ export default function SpriteCard({ sprite, view = "grid", onEdit, onDelete }: 
               </button>
             )
           )}
-          <button className="text-xs bg-green-500/10 hover:bg-green-500/20 border border-green-500/30 text-green-400 px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap">
+          <button
+            onClick={(e) => e.stopPropagation()}
+            className="text-xs bg-green-500/10 hover:bg-green-500/20 border border-green-500/30 text-green-400 px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap"
+          >
             Get
           </button>
         </div>
@@ -104,7 +123,10 @@ export default function SpriteCard({ sprite, view = "grid", onEdit, onDelete }: 
   }
 
   return (
-    <div className="group bg-neutral-900 border border-green-900/20 rounded-2xl overflow-hidden hover:border-green-500/40 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-green-900/20">
+    <div
+      onClick={handleCardClick}
+      className="group bg-neutral-900 border border-green-900/20 rounded-2xl overflow-hidden hover:border-green-500/40 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-green-900/20 cursor-pointer"
+    >
       <div
         className="aspect-square relative overflow-hidden"
         style={{
@@ -128,7 +150,7 @@ export default function SpriteCard({ sprite, view = "grid", onEdit, onDelete }: 
         <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
           {onEdit && (
             <button
-              onClick={() => onEdit(sprite)}
+              onClick={handleEdit}
               className="bg-neutral-900/80 hover:bg-neutral-800 border border-neutral-700 text-gray-300 hover:text-white text-xs px-2 py-1 rounded-lg backdrop-blur-sm transition-colors"
             >
               Edit
@@ -168,7 +190,10 @@ export default function SpriteCard({ sprite, view = "grid", onEdit, onDelete }: 
           {sprite.name}
         </h3>
         <div className="flex items-center justify-between mt-3">
-          <button className="text-xs bg-green-500/10 hover:bg-green-500/20 border border-green-500/30 text-green-400 px-3 py-1 rounded-lg transition-colors">
+          <button
+            onClick={(e) => e.stopPropagation()}
+            className="text-xs bg-green-500/10 hover:bg-green-500/20 border border-green-500/30 text-green-400 px-3 py-1 rounded-lg transition-colors"
+          >
             Get
           </button>
         </div>
