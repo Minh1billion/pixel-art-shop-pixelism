@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import {
     HiOutlineArrowLeft,
     HiOutlinePencilSquare,
@@ -41,14 +40,9 @@ function Skeleton() {
     return (
         <div className="min-h-screen bg-neutral-950 text-white">
             <div className="w-full px-4 sm:px-6 lg:px-8 py-10 max-w-6xl mx-auto">
-                {/* back button skeleton */}
                 <div className="w-24 h-8 rounded-lg bg-neutral-900 animate-pulse mb-8" />
-
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-                    {/* image skeleton */}
                     <div className="aspect-square rounded-2xl bg-neutral-900 animate-pulse" />
-
-                    {/* info skeleton */}
                     <div className="space-y-5">
                         <div className="h-8 w-3/4 rounded-lg bg-neutral-900 animate-pulse" />
                         <div className="h-4 w-1/2 rounded bg-neutral-900 animate-pulse" />
@@ -82,7 +76,6 @@ export default function SpriteDetail({
     onRefresh,
 }: SpriteDetailProps) {
     const { user } = useAuth();
-    const router = useRouter();
 
     const [copied, setCopied] = useState(false);
     const [deleting, setDeleting] = useState(false);
@@ -163,7 +156,6 @@ export default function SpriteDetail({
         <div className="min-h-screen bg-neutral-950 text-white">
             <div className="w-full px-4 sm:px-6 lg:px-8 py-10 max-w-6xl mx-auto">
 
-                {/* ── breadcrumb / back ── */}
                 <div className="flex items-center gap-3 mb-8">
                     <button
                         onClick={onBack}
@@ -176,16 +168,11 @@ export default function SpriteDetail({
                     <span className="text-sm text-gray-500 truncate max-w-xs">{sprite.name}</span>
                 </div>
 
-                {/* ── main grid ── */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
 
-                    {/* ── left: image ── */}
                     <div className="relative group">
-                        {/* Glow effect */}
                         <div className="absolute inset-0 rounded-2xl bg-green-500/5 blur-xl scale-95 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-
                         <div className="relative aspect-square rounded-2xl overflow-hidden border border-neutral-800/60 bg-neutral-900 flex items-center justify-center">
-                            {/* checkerboard transparent bg */}
                             <div
                                 className="absolute inset-0 opacity-40"
                                 style={{
@@ -195,13 +182,11 @@ export default function SpriteDetail({
                                     backgroundPosition: "0 0, 0 10px, 10px -10px, -10px 0px",
                                 }}
                             />
-
                             {!imageLoaded && (
                                 <div className="absolute inset-0 flex items-center justify-center">
                                     <HiOutlinePhoto className="w-12 h-12 text-neutral-700 animate-pulse" />
                                 </div>
                             )}
-
                             <Image
                                 src={sprite.imageUrl}
                                 alt={sprite.name}
@@ -213,10 +198,7 @@ export default function SpriteDetail({
                         </div>
                     </div>
 
-                    {/* ── right: info ── */}
                     <div className="flex flex-col gap-6">
-
-                        {/* name */}
                         <div>
                             <h1 className="text-3xl font-bold text-white tracking-tight leading-tight">
                                 {sprite.name}
@@ -224,7 +206,6 @@ export default function SpriteDetail({
                             <p className="text-slate-500 text-sm mt-1 font-mono">/{sprite.slug}</p>
                         </div>
 
-                        {/* categories */}
                         {sprite.categoryNames.length > 0 && (
                             <div className="flex flex-wrap gap-2">
                                 {sprite.categoryNames.map((cat, i) => (
@@ -239,7 +220,6 @@ export default function SpriteDetail({
                             </div>
                         )}
 
-                        {/* meta info */}
                         <div className="rounded-xl border border-neutral-800/60 bg-neutral-900/50 divide-y divide-neutral-800/60 overflow-hidden">
                             <div className="flex items-center gap-3 px-4 py-3">
                                 <HiOutlineUser className="w-4 h-4 text-gray-500 shrink-0" />
@@ -253,9 +233,7 @@ export default function SpriteDetail({
                             </div>
                         </div>
 
-                        {/* ── action buttons ── */}
                         <div className="grid grid-cols-2 gap-3">
-                            {/* Download */}
                             <button
                                 onClick={handleDownload}
                                 className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium bg-green-500 hover:bg-green-400 text-black transition-colors"
@@ -264,7 +242,6 @@ export default function SpriteDetail({
                                 Download
                             </button>
 
-                            {/* Copy URL */}
                             <button
                                 onClick={handleCopyUrl}
                                 className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium border transition-all ${
@@ -286,7 +263,6 @@ export default function SpriteDetail({
                                 )}
                             </button>
 
-                            {/* Edit — owner / admin */}
                             {canEdit && (
                                 <button
                                     onClick={() => setEditOpen(true)}
@@ -297,7 +273,6 @@ export default function SpriteDetail({
                                 </button>
                             )}
 
-                            {/* Delete — owner / admin */}
                             {canDelete && (
                                 <button
                                     onClick={handleDelete}
@@ -313,7 +288,6 @@ export default function SpriteDetail({
                 </div>
             </div>
 
-            {/* ── Edit modal ── */}
             <SavingSpriteForm
                 open={editOpen}
                 editingSprite={spriteForEdit}

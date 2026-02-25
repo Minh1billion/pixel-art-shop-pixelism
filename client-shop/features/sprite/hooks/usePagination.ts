@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef } from "react";
+import { useCallback, useRef, useEffect } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 
 export function usePagination(initialPage = 0, initialSize = 12) {
@@ -14,11 +14,13 @@ export function usePagination(initialPage = 0, initialSize = 12) {
     const routerRef = useRef(router);
     const pathnameRef = useRef(pathname);
     const searchParamsRef = useRef(searchParams);
-    routerRef.current = router;
-    pathnameRef.current = pathname;
-    searchParamsRef.current = searchParams;
-
     const isMounted = useRef(false);
+
+    useEffect(() => {
+        routerRef.current = router;
+        pathnameRef.current = pathname;
+        searchParamsRef.current = searchParams;
+    });
 
     const goToPage = useCallback((p: number) => {
         const params = new URLSearchParams(searchParamsRef.current.toString());
