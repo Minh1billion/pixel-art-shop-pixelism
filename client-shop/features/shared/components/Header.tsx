@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect } from "react"; // useEffect still used for scroll listener
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useLogout } from "@/features/auth/hooks/useLogout";
 
@@ -18,26 +18,25 @@ const NAV_LINKS = [
   { href: "/docs",    label: "Grimoire",  icon: <HiDocumentText className="w-3.5 h-3.5" /> },
 ];
 
-function Avatar({ src, alt }: { src?: string | null; alt: string }) {
-  // Track error state instead of copying src into state
-  // This avoids the setState-in-effect anti-pattern
+function AvatarImage({ src, alt }: { src: string; alt: string }) {
   const [errored, setErrored] = useState(false);
-  const imgSrc = !errored && src ? src : "/placeholder.png";
-
-  // Only reset error flag when src prop actually changes
-  useEffect(() => {
-    setErrored(false);
-  }, [src]);
+  const imgSrc = errored ? "/placeholder.png" : src;
 
   return (
+    <Image
+      src={imgSrc}
+      alt={alt}
+      fill
+      className="object-cover"
+      onError={() => setErrored(true)}
+    />
+  );
+}
+
+function Avatar({ src, alt }: { src?: string | null; alt: string }) {
+  return (
     <div className="relative shrink-0 overflow-hidden rounded-full border border-green-400/30 bg-green-950 transition-all duration-300 w-7 h-7">
-      <Image
-        src={imgSrc}
-        alt={alt}
-        fill
-        className="object-cover"
-        onError={() => setErrored(true)}
-      />
+      <AvatarImage key={src ?? "placeholder"} src={src || "/placeholder.png"} alt={alt} />
     </div>
   );
 }
