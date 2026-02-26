@@ -167,7 +167,7 @@ jobs:
           sleep 30
 
           curl --fail --retry 5 --retry-delay 10 --retry-connrefused --max-time 10 \
-            https://pixelism.duckdns.org/api/actuator/health \
+            https://pixelism.duckdns.org/actuator/health \
             && echo "Backend OK" || { echo "ERROR: Backend health check failed"; exit 1; }
 
           curl --fail --retry 3 --retry-delay 5 --max-time 10 \
