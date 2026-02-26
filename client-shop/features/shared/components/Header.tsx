@@ -8,7 +8,7 @@ import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useLogout } from "@/features/auth/hooks/useLogout";
 
 import { HiHome, HiShoppingBag, HiPhoto, HiUser, HiDocumentText } from "react-icons/hi2";
-import { HiShoppingCart, HiMenu, HiX } from "react-icons/hi";
+import { HiMenu, HiX } from "react-icons/hi";
 
 const NAV_LINKS = [
   { href: "/home",    label: "Kingdom",   icon: <HiHome         className="w-3.5 h-3.5" /> },
@@ -19,10 +19,14 @@ const NAV_LINKS = [
 ];
 
 function Avatar({ src, alt }: { src?: string | null; alt: string }) {
-  const [imgSrc, setImgSrc] = useState(src || "/placeholder.png");
+  // Track error state instead of copying src into state
+  // This avoids the setState-in-effect anti-pattern
+  const [errored, setErrored] = useState(false);
+  const imgSrc = !errored && src ? src : "/placeholder.png";
 
+  // Only reset error flag when src prop actually changes
   useEffect(() => {
-    setImgSrc(src || "/placeholder.png");
+    setErrored(false);
   }, [src]);
 
   return (
@@ -32,7 +36,7 @@ function Avatar({ src, alt }: { src?: string | null; alt: string }) {
         alt={alt}
         fill
         className="object-cover"
-        onError={() => setImgSrc("/placeholder.png")}
+        onError={() => setErrored(true)}
       />
     </div>
   );

@@ -36,6 +36,7 @@ export function useSprites(
       ...filter,
       keyword: debouncedKeyword,
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     debouncedKeyword,
     filter.categoryIds,

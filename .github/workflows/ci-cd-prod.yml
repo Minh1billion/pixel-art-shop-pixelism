@@ -1,8 +1,8 @@
-name: CI/CD Pipeline
+name: CI/CD — Production
 
 on:
   push:
-    branches: [dev, main]
+    branches: [main]
   pull_request:
     branches: [main]
 
@@ -14,13 +14,9 @@ env:
   FRONTEND_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/pixelism-shop-frontend:latest
   BACKEND_PORT: ${{ vars.BACKEND_PORT || '8080' }}
   FRONTEND_PORT: ${{ vars.FRONTEND_PORT || '3000' }}
-  # Placeholder URLs for CI builds — real URLs injected at deploy time
   CI_API_URL: http://localhost:8080/api/v1
   CI_BACKEND_URL: http://localhost:8080
 
-# ─────────────────────────────────────────────────────────
-# CI — runs on every push to dev & main, and on PRs to main
-# ─────────────────────────────────────────────────────────
 jobs:
   frontend:
     name: Frontend CI
@@ -90,21 +86,17 @@ jobs:
             -t frontend:ci-test \
             ./client-shop
 
-# ─────────────────────────────────────────────────────────
-# CD — only runs on push to main, after CI passes
-# ─────────────────────────────────────────────────────────
+  # Deploy only on push to main (not on PRs)
   deploy:
     name: Deploy to EC2
     runs-on: ubuntu-latest
     environment: production
-    # Gate: only deploy on main branch pushes, CI must pass first
     needs: [docker-validate]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: github.event_name == 'push'
 
     steps:
       - uses: actions/checkout@v4
 
-      # Login once — reused for both build & push
       - name: Login to Docker Hub
         run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
 
@@ -132,7 +124,6 @@ jobs:
           mkdir -p ~/.ssh && chmod 700 ~/.ssh
           ssh-keyscan -H "${{ secrets.EC2_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
 
-      # Write all secrets to a single .env file, then upload
       - name: Build .env
         run: |
           printf '%s\n' \
@@ -170,7 +161,6 @@ jobs:
           ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "mkdir -p ${{ env.APP_DIR }}"
           scp /tmp/app.env ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${{ env.APP_DIR }}/.env
 
-      # Pull latest images and recreate containers
       - name: Deploy on EC2
         env:
           DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
@@ -193,7 +183,6 @@ jobs:
             echo "Deploy complete."
           ENDSSH
 
-      # Wait for containers to initialize, then verify both services respond
       - name: Health Check
         run: |
           echo "Waiting 30s for services to start..."
