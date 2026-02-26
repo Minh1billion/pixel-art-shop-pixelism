@@ -146,7 +146,6 @@ export default function SpriteCard({ sprite, view = "grid", onEdit, onDelete }: 
           <div className="absolute inset-0 flex items-center justify-center text-3xl">🎮</div>
         )}
 
-        {/* Action buttons on hover */}
         <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
           {onEdit && (
             <button
@@ -189,14 +188,6 @@ export default function SpriteCard({ sprite, view = "grid", onEdit, onDelete }: 
         <h3 className="text-white text-sm font-semibold truncate group-hover:text-green-300 transition-colors">
           {sprite.name}
         </h3>
-        <div className="flex items-center justify-between mt-3">
-          <button
-            onClick={(e) => e.stopPropagation()}
-            className="text-xs bg-green-500/10 hover:bg-green-500/20 border border-green-500/30 text-green-400 px-3 py-1 rounded-lg transition-colors"
-          >
-            Get
-          </button>
-        </div>
       </div>
     </div>
   );
