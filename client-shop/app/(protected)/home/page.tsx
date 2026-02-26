@@ -1,12 +1,18 @@
 "use client";
 
+import { useRouter } from "next/router";
+
 export default function HomePage() {
+  const router = useRouter();
+
   return (
     <main className="bg-neutral-950 text-white">
       <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-12 sm:pt-20 pb-12 sm:pb-16">
         <div className="inline-flex items-center gap-2 bg-green-950/50 border border-green-400/20 px-3 sm:px-4 py-2 rounded-full mb-6 sm:mb-8">
           <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse shrink-0" />
-          <span className="text-green-300 text-xs tracking-wider font-medium uppercase">Pixel Art Marketplace</span>
+          <span className="text-green-300 text-xs tracking-wider font-medium uppercase">
+            Pixel Art Marketplace
+          </span>
         </div>
 
         <h1 className="text-4xl sm:text-5xl md:text-7xl font-black leading-none tracking-tight mb-5 sm:mb-6">
@@ -20,10 +26,17 @@ export default function HomePage() {
         </p>
 
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-          <button className="px-8 py-3 bg-green-400 text-neutral-950 font-bold rounded-xl hover:bg-green-300 transition-colors text-sm tracking-wide w-full sm:w-auto">
+          <button
+            onClick={() => router.push("/store")}
+            className="px-8 py-3 bg-green-400 text-neutral-950 font-bold rounded-xl hover:bg-green-300 transition-colors text-sm tracking-wide w-full sm:w-auto"
+          >
             Browse Sprites
           </button>
-          <button className="px-8 py-3 bg-transparent border border-neutral-700 hover:border-green-400/50 text-white font-medium rounded-xl transition-colors text-sm w-full sm:w-auto">
+
+          <button
+            onClick={() => router.push("/docs")}
+            className="px-8 py-3 bg-transparent border border-neutral-700 hover:border-green-400/50 text-white font-medium rounded-xl transition-colors text-sm w-full sm:w-auto"
+          >
             View Pricing
           </button>
         </div>
