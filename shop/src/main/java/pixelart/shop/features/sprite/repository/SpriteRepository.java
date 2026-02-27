@@ -21,7 +21,7 @@ public interface SpriteRepository extends JpaRepository<Sprite, UUID>, JpaSpecif
 
     boolean existsBySlug(String slug);
 
-    @Query("SELECT s FROM Sprite s WHERE s.isActive = false AND s.updatedAt < :cutoffDate")
+    @Query("SELECT s FROM Sprite s WHERE s.deletedAt IS NOT NULL AND s.deletedAt < :cutoffDate")
     List<Sprite> findInactiveBefore(LocalDateTime cutoffDate);
 
     @EntityGraph(attributePaths = {"categories", "createdBy"})

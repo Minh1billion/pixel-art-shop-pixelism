@@ -12,8 +12,6 @@ public record SpriteResponse(
         UUID id,
         String name,
         String slug,
-//        String description,
-//        BigDecimal price,
         String imageUrl,
         List<UUID> categoryIds,
         List<String> categoryNames,
@@ -26,8 +24,6 @@ public record SpriteResponse(
                 s.getId(),
                 s.getName(),
                 s.getSlug(),
-//                s.getDescription(),
-//                s.getPrice(),
                 s.getImageUrl(),
                 s.getCategories().stream()
                         .map(Category::getId).toList(),

@@ -11,7 +11,9 @@ public record SpriteListResponse(
         String name,
         String slug,
         String imageUrl,
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+        LocalDateTime deletedAt
+
 ) {
     public static SpriteListResponse from(Sprite s) {
         return new SpriteListResponse(
@@ -19,7 +21,8 @@ public record SpriteListResponse(
                 s.getName(),
                 s.getSlug(),
                 s.getImageUrl(),
-                s.getCreatedAt()
+                s.getCreatedAt(),
+                s.getDeletedAt()
         );
     }
 }

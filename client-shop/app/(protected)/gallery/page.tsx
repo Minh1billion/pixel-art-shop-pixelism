@@ -11,12 +11,14 @@ import { useSpritesByUser } from "@/features/sprite/hooks/useSpritesByUser";
 import { useCategories } from "@/features/sprite/hooks/useCategories";
 import { useUsers } from "@/features/user/hooks/useUsers";
 import { useAuth } from "@/features/auth/hooks/useAuth";
+import { useDeleteConfirm } from "@/features/shared/hooks/useDeleteConfirm";
 import { SpriteService } from "@/features/sprite/services/sprite.service";
 import SpriteFilters from "@/features/sprite/components/SpriteFilters";
 import SpriteGrid from "@/features/sprite/components/SpriteGrid";
 import Pagination from "@/features/sprite/components/Pagination";
 import SavingSpriteForm from "@/features/sprite/components/SavingSpriteForm";
 import TrashPanel from "@/features/sprite/components/TrashPanel";
+import DeleteConfirmModal from "@/features/shared/components/DeleteConfirmModal";
 import type { SpriteListResponse } from "@/features/sprite/types";
 import type { UserListResponse } from "@/features/user/types";
 
@@ -30,10 +32,12 @@ export default function GalleryPage() {
     const [selectedUser, setSelectedUser] = useState<UserListResponse | null>(null);
     const [userKeyword, setUserKeyword] = useState("");
     const [trashOpen, setTrashOpen] = useState(false);
+    const [deletingId, setDeletingId] = useState<string | null>(null);
 
     const { filter, updateFilter, resetFilter, toggleCategory } = useSpriteFilter();
     const { page, size, goToPage, reset: resetPage } = usePagination(0, 42);
     const { data: categories } = useCategories();
+    const { target, confirmSoftDelete, dismiss } = useDeleteConfirm();
 
     const allSprites = useSprites(filter, page, size);
     const mySprites = useMySprites(filter, page, size);
@@ -58,14 +62,23 @@ export default function GalleryPage() {
     const openEdit = (sprite: SpriteListResponse) => { setEditingSprite(sprite); setModalOpen(true); };
     const handleClose = () => { setModalOpen(false); setEditingSprite(null); };
 
-    const handleDelete = async (sprite: SpriteListResponse) => {
+    const handleDeleteRequest = useCallback((sprite: SpriteListResponse) => {
+        confirmSoftDelete(sprite);
+    }, [confirmSoftDelete]);
+
+    const handleDeleteConfirmed = async () => {
+        if (!target) return;
         try {
-            await SpriteService.deleteById(sprite.id);
+            setDeletingId(target.sprite.id);
+            await SpriteService.deleteById(target.sprite.id);
+            dismiss();
             if (tab === "mine") mySprites.refresh();
             else if (tab === "all") allSprites.refresh();
             else userSprites.refresh();
         } catch (e: any) {
             alert(e.message);
+        } finally {
+            setDeletingId(null);
         }
     };
 
@@ -225,7 +238,7 @@ export default function GalleryPage() {
                                     loading={active.loading}
                                     error={active.error}
                                     onEdit={tab === "mine" ? openEdit : undefined}
-                                    onDelete={tab === "mine" || isAdmin ? handleDelete : undefined}
+                                    onDelete={tab === "mine" || isAdmin ? handleDeleteRequest : undefined}
                                 />
 
                                 {active.data && (
@@ -254,6 +267,14 @@ export default function GalleryPage() {
                 open={trashOpen}
                 onClose={() => setTrashOpen(false)}
                 onRestored={handleRestored}
+            />
+
+            {/* Soft delete confirm modal */}
+            <DeleteConfirmModal
+                target={target}
+                loading={!!deletingId}
+                onConfirm={handleDeleteConfirmed}
+                onCancel={dismiss}
             />
         </div>
     );

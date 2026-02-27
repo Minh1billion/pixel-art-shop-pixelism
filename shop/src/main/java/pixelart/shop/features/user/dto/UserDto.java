@@ -19,7 +19,7 @@ public record UserDto(
         return new UserDto(
                 user.getId(),
                 user.getEmail(),
-                user.getUsername(),
+                user.getNickname(),
                 user.getFullName(),
                 user.getAvatarUrl(),
                 user.getRole().name(),

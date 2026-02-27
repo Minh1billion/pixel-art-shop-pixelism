@@ -93,11 +93,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             eventPublisher.publishEvent(new UserRegisteredEvent(this, user, true));
         }
 
-        // needsPasswordSetup:
-        // - User hoàn toàn mới → chưa có LOCAL → true
-        // - User đã có account trước (existingUser != null):
-        //     * Nếu đã có LOCAL (LOCAL → OAuth flow) → false
-        //     * Nếu chưa có LOCAL (OAuth → OAuth khác) → true
         boolean hasLocal = providerRepository.existsByUserIdAndProvider(
                 user.getId(), UserAuthProvider.Provider.LOCAL
         );
@@ -193,8 +188,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     }
 
     private User createNewUser(String email, String name, String avatarUrl) {
-        String base = name != null ? name.replaceAll("[^a-zA-Z0-9]", "") : "user";
-        if (base.isBlank()) base = "user";
+        String base = buildSafeUsername(name);
 
         String username = base;
         int suffix = 1;
@@ -211,6 +205,39 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                 .build();
 
         return userRepository.save(user);
+    }
+
+    private String buildSafeUsername(String name) {
+        if (name == null || name.isBlank()) {
+            return randomFallback();
+        }
+
+        String normalized = java.text.Normalizer
+                .normalize(name, java.text.Normalizer.Form.NFD)
+                .replaceAll("\\p{InCombiningDiacriticalMarks}+", "");
+
+        StringBuilder sb = new StringBuilder();
+        for (char c : normalized.toCharArray()) {
+            if (Character.isLetterOrDigit(c) && c < 128) {
+                sb.append(c);
+            } else if (c == ' ' || c == '_' || c == '-') {
+            } else if (!Character.isWhitespace(c)) {
+                sb.append((char) ('a' + (int) (Math.random() * 26)));
+            }
+        }
+
+        String result = sb.toString().toLowerCase();
+
+        return result.length() >= 3 ? result : randomFallback();
+    }
+
+    private String randomFallback() {
+        String letters = "abcdefghijklmnopqrstuvwxyz";
+        StringBuilder sb = new StringBuilder("user");
+        for (int i = 0; i < 4; i++) {
+            sb.append(letters.charAt((int) (Math.random() * letters.length())));
+        }
+        return sb.toString();
     }
 
     private UserAuthProvider.Provider mapProvider(String registrationId) {

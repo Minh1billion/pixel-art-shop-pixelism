@@ -12,9 +12,6 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 
-/**
- * Scheduled job để tự động xóa vĩnh viễn các sprite đã bị soft delete quá 30 ngày
- */
 @Slf4j
 @Component
 @RequiredArgsConstructor

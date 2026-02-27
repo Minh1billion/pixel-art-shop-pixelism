@@ -22,7 +22,7 @@ public class AssetPackSpecification {
 
             Predicate predicate = cb.conjunction();
 
-            predicate = cb.and(predicate, cb.isTrue(root.get("isActive")));
+            predicate = cb.and(predicate, cb.isNull(root.get("deletedAt")));
 
             if (keyword != null && !keyword.isBlank()) {
                 String pattern = "%" + keyword.toLowerCase() + "%";
@@ -43,10 +43,6 @@ public class AssetPackSpecification {
             }
 
             if (categoryIds != null && !categoryIds.isEmpty()) {
-                // EXISTS (SELECT 1 FROM asset_pack_sprites aps
-                //         JOIN sprite_categories sc ON aps.sprite_id = sc.sprite_id
-                //         WHERE aps.asset_pack_id = pack.id
-                //         AND sc.category_id IN (:categoryIds))
                 Subquery<Category> subquery = query.subquery(Category.class);
                 Root<AssetPack> subRoot = subquery.correlate(root);
                 Join<AssetPack, Sprite> spriteJoin = subRoot.join("sprites");

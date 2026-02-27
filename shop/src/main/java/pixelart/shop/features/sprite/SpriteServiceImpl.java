@@ -142,7 +142,7 @@ public class SpriteServiceImpl implements SpriteService {
                 .findById(id)
                 .orElseThrow(() -> AppException.notFound("Sprite does not exist"));
 
-        sprite.setActive(false);
+        sprite.softDelete();
         spriteRepository.save(sprite);
     }
 
@@ -173,7 +173,7 @@ public class SpriteServiceImpl implements SpriteService {
             throw AppException.badRequest("Sprite is not in trash");
         }
 
-        sprite.setActive(true);
+        sprite.restore();
 
         return SpriteResponse.from(spriteRepository.save(sprite));
     }

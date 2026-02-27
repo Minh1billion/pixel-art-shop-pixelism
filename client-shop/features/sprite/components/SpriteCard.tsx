@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { HiOutlineTrash } from "react-icons/hi2";
 import type { SpriteListResponse } from "@/features/sprite/types";
@@ -15,7 +14,6 @@ interface SpriteCardProps {
 
 export default function SpriteCard({ sprite, view = "grid", onEdit, onDelete }: SpriteCardProps) {
   const router = useRouter();
-  const [confirmDelete, setConfirmDelete] = useState(false);
 
   if (!sprite) return null;
 
@@ -25,18 +23,7 @@ export default function SpriteCard({ sprite, view = "grid", onEdit, onDelete }: 
 
   const handleDeleteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setConfirmDelete(true);
-  };
-
-  const handleConfirm = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setConfirmDelete(false);
     onDelete?.(sprite);
-  };
-
-  const handleCancel = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setConfirmDelete(false);
   };
 
   const handleEdit = (e: React.MouseEvent) => {
@@ -86,30 +73,13 @@ export default function SpriteCard({ sprite, view = "grid", onEdit, onDelete }: 
             </button>
           )}
           {onDelete && (
-            confirmDelete ? (
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={handleConfirm}
-                  className="text-xs bg-red-500/20 hover:bg-red-500/30 border border-red-500/40 text-red-400 px-2 py-1.5 rounded-lg transition-colors whitespace-nowrap"
-                >
-                  Confirm
-                </button>
-                <button
-                  onClick={handleCancel}
-                  className="text-xs bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 text-gray-400 px-2 py-1.5 rounded-lg transition-colors"
-                >
-                  Cancel
-                </button>
-              </div>
-            ) : (
-              <button
-                onClick={handleDeleteClick}
-                className="text-xs bg-neutral-800 hover:bg-red-500/10 border border-neutral-700 hover:border-red-500/30 text-gray-500 hover:text-red-400 p-1.5 rounded-lg transition-colors"
-                aria-label="Delete"
-              >
-                <HiOutlineTrash className="w-3.5 h-3.5" />
-              </button>
-            )
+            <button
+              onClick={handleDeleteClick}
+              className="text-xs bg-neutral-800 hover:bg-red-500/10 border border-neutral-700 hover:border-red-500/30 text-gray-500 hover:text-red-400 p-1.5 rounded-lg transition-colors"
+              aria-label="Delete"
+            >
+              <HiOutlineTrash className="w-3.5 h-3.5" />
+            </button>
           )}
           <button
             onClick={(e) => e.stopPropagation()}
@@ -156,30 +126,13 @@ export default function SpriteCard({ sprite, view = "grid", onEdit, onDelete }: 
             </button>
           )}
           {onDelete && (
-            confirmDelete ? (
-              <div className="flex gap-1">
-                <button
-                  onClick={handleConfirm}
-                  className="bg-red-500/80 hover:bg-red-500 border border-red-500/60 text-white text-xs px-2 py-1 rounded-lg backdrop-blur-sm transition-colors"
-                >
-                  ✓
-                </button>
-                <button
-                  onClick={handleCancel}
-                  className="bg-neutral-900/80 hover:bg-neutral-800 border border-neutral-700 text-gray-300 text-xs px-2 py-1 rounded-lg backdrop-blur-sm transition-colors"
-                >
-                  ✕
-                </button>
-              </div>
-            ) : (
-              <button
-                onClick={handleDeleteClick}
-                className="bg-neutral-900/80 hover:bg-red-500/20 border border-neutral-700 hover:border-red-500/40 text-gray-400 hover:text-red-400 p-1 rounded-lg backdrop-blur-sm transition-colors"
-                aria-label="Delete"
-              >
-                <HiOutlineTrash className="w-3.5 h-3.5" />
-              </button>
-            )
+            <button
+              onClick={handleDeleteClick}
+              className="bg-neutral-900/80 hover:bg-red-500/20 border border-neutral-700 hover:border-red-500/40 text-gray-400 hover:text-red-400 p-1 rounded-lg backdrop-blur-sm transition-colors"
+              aria-label="Delete"
+            >
+              <HiOutlineTrash className="w-3.5 h-3.5" />
+            </button>
           )}
         </div>
       </div>

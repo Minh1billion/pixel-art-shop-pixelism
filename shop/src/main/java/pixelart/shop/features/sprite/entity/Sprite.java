@@ -57,12 +57,24 @@ public class Sprite {
     @JoinColumn(name = "created_by", nullable = false)
     private User createdBy;
 
-    @Builder.Default
-    private boolean isActive = true;
+    @Column
+    private LocalDateTime deletedAt;
 
     @CreationTimestamp
     private LocalDateTime createdAt;
 
     @UpdateTimestamp
     private LocalDateTime updatedAt;
+
+    public boolean isActive() {
+        return deletedAt == null;
+    }
+
+    public void softDelete() {
+        this.deletedAt = LocalDateTime.now();
+    }
+
+    public void restore() {
+        this.deletedAt = null;
+    }
 }

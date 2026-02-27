@@ -20,7 +20,7 @@ public class SpriteSpecification {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
-            predicates.add(cb.isTrue(root.get("isActive")));
+            predicates.add(cb.isNull(root.get("deletedAt")));
 
             if (createdBy != null) {
                 predicates.add(cb.equal(root.get("createdBy"), createdBy));
@@ -42,7 +42,7 @@ public class SpriteSpecification {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
-            predicates.add(cb.isFalse(root.get("isActive")));
+            predicates.add(cb.isNotNull(root.get("deletedAt")));
 
             if (createdBy != null) {
                 predicates.add(cb.equal(root.get("createdBy"), createdBy));

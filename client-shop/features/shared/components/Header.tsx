@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState, useEffect } from "react"; // useEffect still used for scroll listener
+import { useState, useEffect } from "react"; 
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useLogout } from "@/features/auth/hooks/useLogout";
 
@@ -92,13 +92,13 @@ export function Header() {
         <div className="flex items-center gap-2">
           <div className="hidden sm:flex items-center gap-2">
             <div className="w-px h-4 bg-neutral-800" />
-            <Avatar src={user?.avatarUrl} alt={user?.fullName ?? "User"} />
+            <Avatar src={user?.avatarUrl} alt={user?.username ?? "User"} />
             <span
               className={`font-medium text-white leading-none whitespace-nowrap max-w-45 truncate transition-all duration-300 ${
                 scrolled ? "text-xs" : "text-sm"
               }`}
             >
-              {user?.fullName}
+              {user?.username}
             </span>
             <button
               onClick={logout}
@@ -155,9 +155,8 @@ export function Header() {
       {menuOpen && (
         <div className="sm:hidden border-t border-neutral-800 bg-neutral-950 px-4 py-4">
           <div className="flex items-center gap-3 mb-4 pb-4 border-b border-neutral-800">
-            <Avatar src={user?.avatarUrl} alt={user?.fullName ?? "User"} />
+            <Avatar src={user?.avatarUrl} alt={user?.username ?? "User"} />
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-white truncate">{user?.fullName}</p>
               <p className="text-xs text-green-400">@{user?.username}</p>
             </div>
           </div>

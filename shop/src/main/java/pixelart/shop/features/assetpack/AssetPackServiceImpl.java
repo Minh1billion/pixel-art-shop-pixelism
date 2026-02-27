@@ -68,7 +68,7 @@ public class AssetPackServiceImpl implements AssetPackService {
     @Transactional(readOnly = true)
     public AssetPackResponse getById(UUID id) {
         return assetPackRepository
-                .findByIdAndIsActiveTrue(id)
+                .findByIdAndActive(id)
                 .map(AssetPackResponse::from)
                 .orElseThrow(() -> AppException.notFound("Asset pack does not exist"));
     }
@@ -125,13 +125,10 @@ public class AssetPackServiceImpl implements AssetPackService {
 
     @Override
     public void delete(UUID id) {
-
-        AssetPack pack = assetPackRepository
-                .findById(id)
-                .orElseThrow(() -> AppException.notFound("Asset pack does not exist"));
-
-        pack.setActive(false);
-        assetPackRepository.save(pack);
+        Sprite sprite = spriteRepository.findById(id)
+                .orElseThrow(() -> AppException.notFound("Sprite does not exist"));
+        sprite.softDelete();
+        spriteRepository.save(sprite);
     }
 
     private List<Sprite> resolveSprites(List<UUID> spriteIds) {

@@ -9,6 +9,7 @@ export interface SpriteListResponse {
   slug: string;
   imageUrl: string;
   createdAt: string;
+  deletedAt?: string | null;
 }
 
 export interface SpriteResponse {

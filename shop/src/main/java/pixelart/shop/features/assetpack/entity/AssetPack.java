@@ -56,8 +56,8 @@ public class AssetPack {
     @JoinColumn(name = "created_by", nullable = false)
     private User createdBy;
 
-    @Builder.Default
-    private boolean isActive = true;
+    @Column
+    private LocalDateTime deletedAt;
 
     @CreationTimestamp
     private LocalDateTime createdAt;
@@ -70,5 +70,13 @@ public class AssetPack {
         for (Sprite sprite : sprites) {
             sprite.getAssetPacks().remove(this);
         }
+    }
+
+    public boolean isActive() {
+        return deletedAt == null;
+    }
+
+    public void softDelete() {
+        this.deletedAt = LocalDateTime.now();
     }
 }

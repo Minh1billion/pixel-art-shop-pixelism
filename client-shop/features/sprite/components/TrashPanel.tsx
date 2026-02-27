@@ -5,6 +5,8 @@ import { useState } from "react";
 import { HiOutlineTrash, HiOutlineArrowPath, HiXMark } from "react-icons/hi2";
 import { useTrashSprites } from "@/features/sprite/hooks/useTrashSprites";
 import { SpriteService } from "@/features/sprite/services/sprite.service";
+import DeleteConfirmModal from "@/features/shared/components/DeleteConfirmModal";
+import { useDeleteConfirm } from "@/features/shared/hooks/useDeleteConfirm";
 import type { SpriteListResponse } from "@/features/sprite/types";
 
 interface TrashPanelProps {
@@ -13,12 +15,20 @@ interface TrashPanelProps {
     onRestored?: () => void;
 }
 
+function getDaysRemaining(deletedAt: string): { days: number; urgent: boolean } {
+    const deleted = new Date(deletedAt).getTime();
+    const expiry = deleted + 30 * 24 * 60 * 60 * 1000;
+    const now = Date.now();
+    const days = Math.max(0, Math.ceil((expiry - now) / (1000 * 60 * 60 * 24)));
+    return { days, urgent: days <= 5 };
+}
+
 export default function TrashPanel({ open, onClose, onRestored }: TrashPanelProps) {
     const [page, setPage] = useState(0);
     const [loadingId, setLoadingId] = useState<string | null>(null);
-    const [confirmHardDelete, setConfirmHardDelete] = useState<string | null>(null);
 
     const { data, loading, error, refresh } = useTrashSprites(page, 20, open);
+    const { target, confirmHardDelete, dismiss } = useDeleteConfirm();
 
     const handleRestore = async (sprite: SpriteListResponse) => {
         try {
@@ -33,11 +43,12 @@ export default function TrashPanel({ open, onClose, onRestored }: TrashPanelProp
         }
     };
 
-    const handleHardDelete = async (sprite: SpriteListResponse) => {
+    const handleHardDeleteConfirmed = async () => {
+        if (!target) return;
         try {
-            setLoadingId(sprite.id);
-            await SpriteService.hardDeleteById(sprite.id);
-            setConfirmHardDelete(null);
+            setLoadingId(target.sprite.id);
+            await SpriteService.hardDeleteById(target.sprite.id);
+            dismiss();
             refresh();
         } catch (e: any) {
             alert(e.message);
@@ -125,7 +136,7 @@ export default function TrashPanel({ open, onClose, onRestored }: TrashPanelProp
 
                     {!loading && sprites.map((sprite) => {
                         const isLoading = loadingId === sprite.id;
-                        const isConfirming = confirmHardDelete === sprite.id;
+                        const deletedInfo = sprite.deletedAt ? getDaysRemaining(sprite.deletedAt) : null;
 
                         return (
                             <div
@@ -153,59 +164,53 @@ export default function TrashPanel({ open, onClose, onRestored }: TrashPanelProp
                                     )}
                                 </div>
 
-                                {/* Name */}
+                                {/* Info */}
                                 <div className="flex-1 min-w-0">
                                     <p className="text-white text-xs font-medium truncate">{sprite.name}</p>
-                                    <p className="text-gray-600 text-[10px] mt-0.5">
-                                        Deleted {new Date(sprite.createdAt).toLocaleDateString()}
-                                    </p>
+                                    {sprite.deletedAt ? (
+                                        <div className="flex items-center gap-1.5 mt-0.5">
+                                            <p className="text-gray-600 text-[10px]">
+                                                Deleted {new Date(sprite.deletedAt).toLocaleDateString()}
+                                            </p>
+                                            {deletedInfo && (
+                                                <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-medium ${
+                                                    deletedInfo.urgent
+                                                        ? "bg-red-500/15 text-red-400 border border-red-500/20"
+                                                        : "bg-neutral-800 text-gray-500 border border-neutral-700"
+                                                }`}>
+                                                    {deletedInfo.days}d left
+                                                </span>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <p className="text-gray-600 text-[10px] mt-0.5">—</p>
+                                    )}
                                 </div>
 
                                 {/* Actions */}
                                 <div className="shrink-0 flex items-center gap-1">
-                                    {isConfirming ? (
-                                        <>
-                                            <button
-                                                onClick={() => handleHardDelete(sprite)}
-                                                disabled={isLoading}
-                                                className="text-[10px] bg-red-500/20 hover:bg-red-500/30 border border-red-500/40 text-red-400 px-2 py-1 rounded-lg transition-colors disabled:opacity-50"
-                                            >
-                                                {isLoading ? "..." : "Delete"}
-                                            </button>
-                                            <button
-                                                onClick={() => setConfirmHardDelete(null)}
-                                                disabled={isLoading}
-                                                className="text-[10px] bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 text-gray-400 px-2 py-1 rounded-lg transition-colors disabled:opacity-50"
-                                            >
-                                                Cancel
-                                            </button>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <button
-                                                onClick={() => handleRestore(sprite)}
-                                                disabled={isLoading}
-                                                className="p-1.5 rounded-lg text-gray-500 hover:text-green-400 hover:bg-green-500/10 border border-transparent hover:border-green-500/20 transition-colors disabled:opacity-50"
-                                                aria-label="Restore"
-                                                title="Restore"
-                                            >
-                                                {isLoading ? (
-                                                    <span className="text-[10px]">...</span>
-                                                ) : (
-                                                    <HiOutlineArrowPath className="w-3.5 h-3.5" />
-                                                )}
-                                            </button>
-                                            <button
-                                                onClick={() => setConfirmHardDelete(sprite.id)}
-                                                disabled={isLoading}
-                                                className="p-1.5 rounded-lg text-gray-500 hover:text-red-400 hover:bg-red-500/10 border border-transparent hover:border-red-500/20 transition-colors disabled:opacity-50"
-                                                aria-label="Delete permanently"
-                                                title="Delete permanently"
-                                            >
-                                                <HiOutlineTrash className="w-3.5 h-3.5" />
-                                            </button>
-                                        </>
-                                    )}
+                                    <button
+                                        onClick={() => handleRestore(sprite)}
+                                        disabled={isLoading}
+                                        className="p-1.5 rounded-lg text-gray-500 hover:text-green-400 hover:bg-green-500/10 border border-transparent hover:border-green-500/20 transition-colors disabled:opacity-50"
+                                        aria-label="Restore"
+                                        title="Restore"
+                                    >
+                                        {isLoading ? (
+                                            <span className="inline-block w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                                        ) : (
+                                            <HiOutlineArrowPath className="w-3.5 h-3.5" />
+                                        )}
+                                    </button>
+                                    <button
+                                        onClick={() => confirmHardDelete(sprite)}
+                                        disabled={isLoading}
+                                        className="p-1.5 rounded-lg text-gray-500 hover:text-red-400 hover:bg-red-500/10 border border-transparent hover:border-red-500/20 transition-colors disabled:opacity-50"
+                                        aria-label="Delete permanently"
+                                        title="Delete permanently"
+                                    >
+                                        <HiOutlineTrash className="w-3.5 h-3.5" />
+                                    </button>
                                 </div>
                             </div>
                         );
@@ -235,6 +240,14 @@ export default function TrashPanel({ open, onClose, onRestored }: TrashPanelProp
                     </div>
                 )}
             </div>
+
+            {/* Hard delete confirm modal */}
+            <DeleteConfirmModal
+                target={target}
+                loading={!!loadingId && target?.sprite.id === loadingId}
+                onConfirm={handleHardDeleteConfirmed}
+                onCancel={dismiss}
+            />
         </>
     );
 }
