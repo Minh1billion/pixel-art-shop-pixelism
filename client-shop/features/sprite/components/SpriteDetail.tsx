@@ -191,7 +191,8 @@ export default function SpriteDetail({
                                 src={sprite.imageUrl}
                                 alt={sprite.name}
                                 fill
-                                className={`object-contain p-8 transition-opacity duration-500 ${imageLoaded ? "opacity-100" : "opacity-0"}`}
+                                className={`object-contain transition-opacity duration-500 ${imageLoaded ? "opacity-100" : "opacity-0"}`}
+                                style={{ imageRendering: "pixelated" }}
                                 onLoad={() => setImageLoaded(true)}
                                 unoptimized
                             />
@@ -244,11 +245,10 @@ export default function SpriteDetail({
 
                             <button
                                 onClick={handleCopyUrl}
-                                className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium border transition-all ${
-                                    copied
+                                className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium border transition-all ${copied
                                         ? "border-green-500/40 bg-green-500/10 text-green-300"
                                         : "border-neutral-700 bg-neutral-900 text-gray-300 hover:text-white hover:border-neutral-600"
-                                }`}
+                                    }`}
                             >
                                 {copied ? (
                                     <>

@@ -9,14 +9,9 @@ export default function cloudinaryLoader({ src, width, quality }: CloudinaryLoad
     return src;
   }
 
-  const q = quality ?? 75;
+  const w = Math.min(width, 800);
+  const transformation = `w_${w},c_limit,fl_preserve_transparency,q_100`;
 
-  const w = Math.min(width, 400);
-  const transformation = `f_auto,w_${w},q_${q},fl_preserve_transparency`;
-
-  if (src.includes(`/image/upload/f_auto`) || src.includes(`/image/upload/w_`)) {
-    return src;
-  }
-
-  return src.replace("/image/upload/", `/image/upload/${transformation}/`);
+  const cleanSrc = src.replace(/\/image\/upload\/[^/]+\//, "/image/upload/");
+  return cleanSrc.replace("/image/upload/", `/image/upload/${transformation}/`);
 }
