@@ -3,17 +3,18 @@
 import { useState, useEffect, Suspense } from "react";
 import Image from "next/image";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useAuthContext } from "@/features/auth/context/AuthContext";
 import LoginForm from "@/features/auth/components/LoginForm";
 import SignUpForm from "@/features/auth/components/SignUpForm";
 import ResetPasswordForm from "@/features/auth/components/ResetPasswordForm";
 import SetupPasswordForm from "@/features/auth/components/SetupPasswordForm";
-import { AuthService } from "@/features/auth/services/auth.service";
 
 type Mode = "login" | "signup" | "reset" | "setup-password";
 
 function EntryContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { isAuthenticated, loading } = useAuthContext();
 
   const modeParam = searchParams.get("mode") as Mode | null;
   const providerParam = searchParams.get("provider") ?? undefined;
@@ -25,28 +26,19 @@ function EntryContent() {
 
   useEffect(() => {
     if (modeParam !== "setup-password") return;
+    if (loading) return;
 
-    const checkAuth = async () => {
-      try {
-        const user = AuthService.getCurrentUser() ?? await AuthService.fetchCurrentUser();
-        if (user) {
-          setMode("setup-password");
-        } else {
-          router.replace("/");
-        }
-      } catch {
-        router.replace("/");
-      }
-    };
-
-    checkAuth();
-  }, [modeParam, router]);
+    if (isAuthenticated) {
+      setMode("setup-password");
+    } else {
+      router.replace("/");
+    }
+  }, [modeParam, isAuthenticated, loading, router]);
 
   if (mode === null) return null;
 
   return (
     <div className="flex min-h-screen">
-      {/* Left panel */}
       <div className="relative w-1/2 hidden md:block overflow-hidden">
         <Image
           src="/entry-bg-img.jpg"
@@ -107,13 +99,17 @@ function EntryContent() {
         </div>
       </div>
 
-      {/* Right panel */}
       <div className="w-full md:w-1/2 flex items-center justify-center bg-neutral-950 p-6 sm:p-8">
         <div className="w-full max-w-md">
-          {/* Mobile logo */}
           <div className="flex items-center gap-3 mb-8 md:hidden">
             <div className="relative w-8 h-8 bg-white/5 rounded-lg p-1 border border-green-400/20">
-              <Image src="/pixelism.png" alt="Pixelism" width={32} height={32} className="w-full h-full object-contain" />
+              <Image
+                src="/pixelism.png"
+                alt="Pixelism"
+                width={32}
+                height={32}
+                className="w-full h-full object-contain"
+              />
             </div>
             <span className="text-white font-black tracking-tight text-lg">PIXELISM</span>
           </div>

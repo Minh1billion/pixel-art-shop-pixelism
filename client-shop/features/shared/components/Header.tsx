@@ -72,7 +72,7 @@ export function Header() {
             }`}
           >
             <Image
-              src="/pixelism.png"
+              src="/pixelism.webp"
               alt="Pixelism"
               width={28}
               height={28}

@@ -39,9 +39,9 @@ export default function GalleryPage() {
     const { data: categories } = useCategories();
     const { target, confirmSoftDelete, dismiss } = useDeleteConfirm();
 
-    const allSprites = useSprites(filter, page, size);
-    const mySprites = useMySprites(filter, page, size);
-    const userSprites = useSpritesByUser(selectedUser?.id ?? "", filter, page, size);
+    const allSprites = useSprites(filter, page, size, tab === "all");
+    const mySprites = useMySprites(filter, page, size, tab === "mine");
+    const userSprites = useSpritesByUser(selectedUser?.id ?? "", filter, page, size, tab === "byUser");
     const { data: usersData, loading: usersLoading } = useUsers(userKeyword, 0, 20);
 
     const [modalOpen, setModalOpen] = useState(false);
@@ -176,7 +176,7 @@ export default function GalleryPage() {
                                         >
                                             <div className="w-7 h-7 rounded-full bg-neutral-800 shrink-0 flex items-center justify-center text-xs font-semibold text-green-400 overflow-hidden relative">
                                                 {u.avatarUrl
-                                                    ? <Image src={u.avatarUrl} alt={u.username} fill className="object-cover" />
+                                                    ? <Image src={u.avatarUrl} alt={u.username} fill className="object-cover" sizes="28px" />
                                                     : u.username.charAt(0).toUpperCase()
                                                 }
                                             </div>
@@ -269,7 +269,6 @@ export default function GalleryPage() {
                 onRestored={handleRestored}
             />
 
-            {/* Soft delete confirm modal */}
             <DeleteConfirmModal
                 target={target}
                 loading={!!deletingId}

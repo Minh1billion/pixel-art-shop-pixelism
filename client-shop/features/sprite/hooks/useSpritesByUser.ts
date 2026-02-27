@@ -1,38 +1,54 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { SpriteService } from "../services/sprite.service";
+import { useDebounced } from "@/features/shared/hooks/useDebounced";
 import type { SpriteFilterRequest, SpriteListResponse } from "@/features/sprite/types";
 import type { PageResponse } from "@/features/shared/components/types";
 
-export function useSpritesByUser(userId: string, filter: SpriteFilterRequest, page: number, size: number) {
-    const [data, setData] = useState<PageResponse<SpriteListResponse> | null>(null);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const [tick, setTick] = useState(0);
+export function useSpritesByUser(
+  userId: string,
+  filter: SpriteFilterRequest,
+  page: number,
+  size: number,
+  enabled = true
+) {
+  const [data, setData] = useState<PageResponse<SpriteListResponse> | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [tick, setTick] = useState(0);
 
-    const refresh = () => setTick((t) => t + 1);
+  const refresh = () => setTick((t) => t + 1);
 
-    useEffect(() => {
-        if (!userId) return;
-        const controller = new AbortController();
+  const debouncedKeyword = useDebounced(filter.keyword);
 
-        const fetch = async () => {
-            try {
-                setLoading(true);
-                setError(null);
-                const result = await SpriteService.getSpritesByUser(userId, filter, page, size);
-                if (!controller.signal.aborted) setData(result);
-            } catch (err: any) {
-                if (!controller.signal.aborted) setError(err.message);
-            } finally {
-                if (!controller.signal.aborted) setLoading(false);
-            }
-        };
+  const stableFilter = useMemo<SpriteFilterRequest>(() => ({
+    ...filter,
+    keyword: debouncedKeyword,
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }), [debouncedKeyword, filter.categoryIds, filter.sortBy, filter.sortOrder]);
 
-        fetch();
-        return () => controller.abort();
-    }, [userId, filter, page, size, tick]);
+  useEffect(() => {
+    if (!enabled || !userId) return;
 
-    return { data, loading, error, refresh };
+    const controller = new AbortController();
+
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const result = await SpriteService.getSpritesByUser(userId, stableFilter, page, size);
+        if (!controller.signal.aborted) setData(result);
+      } catch (err: any) {
+        if (!controller.signal.aborted) setError(err.message);
+      } finally {
+        if (!controller.signal.aborted) setLoading(false);
+      }
+    };
+
+    fetchData();
+    return () => controller.abort();
+  }, [userId, stableFilter, page, size, tick, enabled]);
+
+  return { data, loading, error, refresh };
 }

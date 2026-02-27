@@ -103,8 +103,8 @@ export default function SpriteGrid({ sprites, loading, error, onEdit, onDelete }
       {toolbar}
       {view === "grid" ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
-          {sprites.map((sprite) => (
-            <SpriteCard key={sprite.id} sprite={sprite} view="grid" onEdit={onEdit} onDelete={onDelete} />
+          {sprites.map((sprite, index) => (
+            <SpriteCard key={sprite.id} sprite={sprite} view="grid" index={index} onEdit={onEdit} onDelete={onDelete} />
           ))}
         </div>
       ) : (

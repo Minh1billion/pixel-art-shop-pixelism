@@ -9,7 +9,7 @@ interface AuthContextType {
   user: AuthResponse["user"] | null;
   isAuthenticated: boolean;
   loading: boolean;
-  refreshUser: () => void;
+  refreshUser: () => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -22,21 +22,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const initAuth = async () => {
-      let currentUser = AuthService.getCurrentUser();
-      if (!currentUser) {
-        try {
-          currentUser = await AuthService.fetchCurrentUser();
-        } catch {}
+      const cachedUser = AuthService.getCurrentUser();
+      if (cachedUser) {
+        setUser(cachedUser);
+        setLoading(false);
       }
-      setUser(currentUser);
-      setLoading(false);
+
+      try {
+        const freshUser = await AuthService.fetchCurrentUser();
+        setUser(freshUser);
+      } catch {
+        setUser(null);
+        if (cachedUser) {
+          router.replace("/");
+        }
+      } finally {
+        setLoading(false);
+      }
     };
+
     initAuth();
   }, []);
 
-  const refreshUser = () => {
-    const currentUser = AuthService.getCurrentUser();
-    setUser(currentUser);
+  useEffect(() => {
+    const handleForceLogout = () => {
+      setUser(null);
+      router.replace("/");
+    };
+
+    window.addEventListener("auth:logout", handleForceLogout);
+    return () => window.removeEventListener("auth:logout", handleForceLogout);
+  }, [router]);
+
+  const refreshUser = async () => {
+    try {
+      const freshUser = await AuthService.fetchCurrentUser();
+      setUser(freshUser);
+    } catch {
+      setUser(null);
+    }
   };
 
   const logout = async () => {
@@ -49,7 +73,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated: !!user, loading, refreshUser, logout }}>
+    <AuthContext.Provider
+      value={{ user, isAuthenticated: !!user, loading, refreshUser, logout }}
+    >
       {children}
     </AuthContext.Provider>
   );

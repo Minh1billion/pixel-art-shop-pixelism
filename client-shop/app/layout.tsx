@@ -7,7 +7,8 @@ const pixelFont = Press_Start_2P({
   weight: "400",
   subsets: ["latin"],
   display: "swap",
-  variable: "--font-pixel"
+  variable: "--font-pixel",
+  preload: true,
 });
 
 export const metadata: Metadata = {
@@ -22,6 +23,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={pixelFont.variable}>
+      <head>
+        <link rel="preconnect" href="https://res.cloudinary.com" />
+        <link rel="preconnect" href="https://lh3.googleusercontent.com" />
+      </head>
       <body className="antialiased">
         <AuthProvider>
           {children}

@@ -8,28 +8,21 @@ import type { SpriteListResponse } from "@/features/sprite/types";
 interface SpriteCardProps {
   sprite: SpriteListResponse;
   view?: "grid" | "list";
+  index?: number;
   onEdit?: (sprite: SpriteListResponse) => void;
   onDelete?: (sprite: SpriteListResponse) => void;
 }
 
-export default function SpriteCard({ sprite, view = "grid", onEdit, onDelete }: SpriteCardProps) {
+export default function SpriteCard({ sprite, view = "grid", index = 99, onEdit, onDelete }: SpriteCardProps) {
   const router = useRouter();
 
   if (!sprite) return null;
 
-  const handleCardClick = () => {
-    router.push(`/gallery/${sprite.id}`);
-  };
+  const isAboveFold = index < 6;
 
-  const handleDeleteClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onDelete?.(sprite);
-  };
-
-  const handleEdit = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onEdit?.(sprite);
-  };
+  const handleCardClick = () => router.push(`/gallery/${sprite.id}`);
+  const handleDeleteClick = (e: React.MouseEvent) => { e.stopPropagation(); onDelete?.(sprite); };
+  const handleEdit = (e: React.MouseEvent) => { e.stopPropagation(); onEdit?.(sprite); };
 
   if (view === "list") {
     return (
@@ -49,6 +42,8 @@ export default function SpriteCard({ sprite, view = "grid", onEdit, onDelete }: 
               src={sprite.imageUrl}
               alt={sprite.name}
               fill
+              sizes="64px"
+              loading={isAboveFold ? "eager" : "lazy"}
               className="object-contain p-2 transition-transform duration-300 group-hover:scale-110"
               style={{ imageRendering: "pixelated" }}
             />
@@ -109,6 +104,8 @@ export default function SpriteCard({ sprite, view = "grid", onEdit, onDelete }: 
             src={sprite.imageUrl}
             alt={sprite.name}
             fill
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, (max-width: 1536px) 20vw, 16vw"
+            loading={isAboveFold ? "eager" : "lazy"}
             className="object-contain p-4 transition-transform duration-300 group-hover:scale-110"
             style={{ imageRendering: "pixelated" }}
           />

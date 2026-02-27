@@ -9,7 +9,6 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 import pixelart.shop.features.sprite.entity.Sprite;
-import pixelart.shop.features.user.entity.User;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -27,4 +26,7 @@ public interface SpriteRepository extends JpaRepository<Sprite, UUID>, JpaSpecif
     @EntityGraph(attributePaths = {"categories", "createdBy"})
     @Query("SELECT s FROM Sprite s WHERE s.id = :id")
     Optional<Sprite> findWithDetailsById(UUID id);
+
+    @EntityGraph(attributePaths = {"categories", "createdBy"})
+    Page<Sprite> findAll(Specification<Sprite> spec, Pageable pageable);
 }
