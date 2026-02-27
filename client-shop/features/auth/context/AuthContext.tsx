@@ -42,7 +42,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     initAuth();
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     const handleForceLogout = () => {

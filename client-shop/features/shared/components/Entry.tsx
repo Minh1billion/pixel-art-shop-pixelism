@@ -20,22 +20,23 @@ function EntryContent() {
   const providerParam = searchParams.get("provider") ?? undefined;
   const message = searchParams.get("message");
 
-  const [mode, setMode] = useState<Mode | null>(
-    modeParam === "setup-password" ? null : (modeParam ?? "login")
-  );
+  const [mode, setMode] = useState<Mode>(modeParam ?? "login");
+
+  const isSetupPassword = modeParam === "setup-password";
+  const resolvedMode: Mode | null = isSetupPassword
+    ? isAuthenticated ? "setup-password" : null
+    : mode;
 
   useEffect(() => {
-    if (modeParam !== "setup-password") return;
+    if (!isSetupPassword) return;
     if (loading) return;
-
-    if (isAuthenticated) {
-      setMode("setup-password");
-    } else {
+    if (!isAuthenticated) {
       router.replace("/");
     }
-  }, [modeParam, isAuthenticated, loading, router]);
+  }, [isSetupPassword, isAuthenticated, loading, router]);
 
-  if (mode === null) return null;
+  if (loading && isSetupPassword) return null;
+  if (resolvedMode === null) return null;
 
   return (
     <div className="flex min-h-screen">
@@ -120,19 +121,19 @@ function EntryContent() {
             </div>
           )}
 
-          {mode === "login" && (
+          {resolvedMode === "login" && (
             <LoginForm
               onSwitchToSignup={() => setMode("signup")}
               onSwitchToReset={() => setMode("reset")}
             />
           )}
-          {mode === "signup" && (
+          {resolvedMode === "signup" && (
             <SignUpForm onSwitchToLogin={() => setMode("login")} />
           )}
-          {mode === "reset" && (
+          {resolvedMode === "reset" && (
             <ResetPasswordForm onSwitchToLogin={() => setMode("login")} />
           )}
-          {mode === "setup-password" && (
+          {resolvedMode === "setup-password" && (
             <SetupPasswordForm providerName={providerParam} />
           )}
         </div>
