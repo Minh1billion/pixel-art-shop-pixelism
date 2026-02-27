@@ -15,29 +15,34 @@ function EntryContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  const initialMode = (searchParams.get("mode") as Mode) ?? "login";
-  const [mode, setMode] = useState<Mode>(initialMode);
-
+  const modeParam = searchParams.get("mode") as Mode | null;
   const providerParam = searchParams.get("provider") ?? undefined;
+  const message = searchParams.get("message");
+
+  const [mode, setMode] = useState<Mode | null>(
+    modeParam === "setup-password" ? null : (modeParam ?? "login")
+  );
 
   useEffect(() => {
-    if (initialMode === "setup-password") {
-      const user = AuthService.getCurrentUser();
-      if (!user) {
-        AuthService.fetchCurrentUser()
-          .then(() => {
-            setMode("setup-password");
-          })
-          .catch(() => {
-            router.replace("/");
-          });
-      } else {
-        setMode("setup-password");
-      }
-    }
-  }, [initialMode, router]);
+    if (modeParam !== "setup-password") return;
 
-  const message = searchParams.get("message");
+    const checkAuth = async () => {
+      try {
+        const user = AuthService.getCurrentUser() ?? await AuthService.fetchCurrentUser();
+        if (user) {
+          setMode("setup-password");
+        } else {
+          router.replace("/");
+        }
+      } catch {
+        router.replace("/");
+      }
+    };
+
+    checkAuth();
+  }, [modeParam, router]);
+
+  if (mode === null) return null;
 
   return (
     <div className="flex min-h-screen">
@@ -113,7 +118,6 @@ function EntryContent() {
             <span className="text-white font-black tracking-tight text-lg">PIXELISM</span>
           </div>
 
-          {/* Message banner */}
           {message && (
             <div className="mb-6 rounded-lg bg-green-500/10 border border-green-400/30 p-3 text-sm text-green-300 text-center">
               {decodeURIComponent(message)}
