@@ -60,7 +60,7 @@ function EntryContent() {
           <div className="flex items-center gap-3 lg:gap-4 mb-6">
             <div className="relative w-12 h-12 lg:w-16 lg:h-16 bg-white/10 backdrop-blur-sm rounded-2xl p-2 border border-green-400/20 shrink-0">
               <Image
-                src="/pixelism.png"
+                src="/pixelism.webp"
                 alt="Pixelism Logo"
                 width={64}
                 height={64}
@@ -105,7 +105,7 @@ function EntryContent() {
           <div className="flex items-center gap-3 mb-8 md:hidden">
             <div className="relative w-8 h-8 bg-white/5 rounded-lg p-1 border border-green-400/20">
               <Image
-                src="/pixelism.png"
+                src="/pixelism.webp"
                 alt="Pixelism"
                 width={32}
                 height={32}

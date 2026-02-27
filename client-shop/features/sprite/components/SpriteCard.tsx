@@ -42,9 +42,9 @@ export default function SpriteCard({ sprite, view = "grid", index = 99, onEdit, 
               src={sprite.imageUrl}
               alt={sprite.name}
               fill
-              sizes="64px"
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, (max-width: 1536px) 20vw, 16vw"
               loading={isAboveFold ? "eager" : "lazy"}
-              className="object-contain p-2 transition-transform duration-300 group-hover:scale-110"
+              className="object-contain p-4 transition-transform duration-300 group-hover:scale-110"
               style={{ imageRendering: "pixelated" }}
             />
           ) : (
