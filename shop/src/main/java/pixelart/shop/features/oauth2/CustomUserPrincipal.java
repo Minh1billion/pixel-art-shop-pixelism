@@ -13,10 +13,12 @@ public class CustomUserPrincipal implements OAuth2User {
 
     private final User user;
     private final Map<String, Object> attributes;
+    private final boolean needsPasswordSetup;
 
-    public CustomUserPrincipal(User user, Map<String, Object> attributes) {
+    public CustomUserPrincipal(User user, Map<String, Object> attributes, boolean needsPasswordSetup) {
         this.user = user;
         this.attributes = attributes;
+        this.needsPasswordSetup = needsPasswordSetup;
     }
 
     @Override

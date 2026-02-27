@@ -4,12 +4,13 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import pixelart.shop.features.assetpack.entity.AssetPack;
 import pixelart.shop.features.category.entity.Category;
 import pixelart.shop.features.user.entity.User;
 
-import javax.net.ssl.SSLSession;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -45,7 +46,12 @@ public class Sprite {
             joinColumns = @JoinColumn(name = "sprite_id"),
             inverseJoinColumns = @JoinColumn(name = "category_id")
     )
-    private List<Category> categories;
+    @Builder.Default
+    private List<Category> categories = new ArrayList<>();
+
+    @ManyToMany(mappedBy = "sprites", fetch = FetchType.LAZY)
+    @Builder.Default
+    private List<AssetPack> assetPacks = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by", nullable = false)

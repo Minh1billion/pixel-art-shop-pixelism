@@ -7,6 +7,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import pixelart.shop.features.sprite.entity.Sprite;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -34,11 +35,19 @@ public class Category {
     private String description;
 
     @ManyToMany(mappedBy = "categories", fetch = FetchType.LAZY)
-    private List<Sprite> sprites;
+    @Builder.Default
+    private List<Sprite> sprites = new ArrayList<>();
 
     @CreationTimestamp
     private LocalDateTime createdAt;
 
     @UpdateTimestamp
     private LocalDateTime updatedAt;
+
+    @PreRemove
+    private void removeFromSprites() {
+        for (Sprite sprite : sprites) {
+            sprite.getCategories().remove(this);
+        }
+    }
 }

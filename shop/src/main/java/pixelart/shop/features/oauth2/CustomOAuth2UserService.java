@@ -35,8 +35,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             throws OAuth2AuthenticationException {
 
         OAuth2User oAuth2User = super.loadUser(request);
-        String registrationId =
-                request.getClientRegistration().getRegistrationId();
+        String registrationId = request.getClientRegistration().getRegistrationId();
 
         log.info("OAuth2 login via {}", registrationId);
         log.debug("Attributes: {}", oAuth2User.getAttributes());
@@ -44,28 +43,25 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         OAuthUserInfo userInfo = extractUserInfo(request, oAuth2User);
 
         if (userInfo.getEmail() == null || userInfo.getEmail().isBlank()) {
-            throw new OAuth2AuthenticationException(
-                    "Email not found from OAuth provider"
-            );
+            throw new OAuth2AuthenticationException("Email not found from OAuth provider");
         }
 
         UserAuthProvider.Provider provider = mapProvider(registrationId);
 
         var existingProvider = providerRepository.findByProviderAndProviderId(
-                provider,
-                userInfo.getProviderId()
+                provider, userInfo.getProviderId()
         );
 
         if (existingProvider.isPresent()) {
             log.info("Existing OAuth2 user found: {}", userInfo.getEmail());
             User user = existingProvider.get().getUser();
-
             updateUserIfNeeded(user, userInfo);
 
-            return new CustomUserPrincipal(
-                    user,
-                    oAuth2User.getAttributes()
+            boolean hasLocal = providerRepository.existsByUserIdAndProvider(
+                    user.getId(), UserAuthProvider.Provider.LOCAL
             );
+
+            return new CustomUserPrincipal(user, oAuth2User.getAttributes(), !hasLocal);
         }
 
         User existingUser = userRepository.findByEmail(userInfo.getEmail()).orElse(null);
@@ -78,11 +74,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             updateUserIfNeeded(user, userInfo);
         } else {
             log.info("Creating new user from OAuth2: {}", userInfo.getEmail());
-            user = createNewUser(
-                    userInfo.getEmail(),
-                    userInfo.getName(),
-                    userInfo.getAvatarUrl()
-            );
+            user = createNewUser(userInfo.getEmail(), userInfo.getName(), userInfo.getAvatarUrl());
         }
 
         try {
@@ -91,7 +83,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                     .provider(provider)
                     .providerId(userInfo.getProviderId())
                     .build();
-
             providerRepository.save(link);
             log.info("Successfully linked {} account to user {}", provider, user.getEmail());
         } catch (Exception e) {
@@ -102,20 +93,28 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             eventPublisher.publishEvent(new UserRegisteredEvent(this, user, true));
         }
 
-        return new CustomUserPrincipal(user, oAuth2User.getAttributes());
+        // needsPasswordSetup:
+        // - User hoàn toàn mới → chưa có LOCAL → true
+        // - User đã có account trước (existingUser != null):
+        //     * Nếu đã có LOCAL (LOCAL → OAuth flow) → false
+        //     * Nếu chưa có LOCAL (OAuth → OAuth khác) → true
+        boolean hasLocal = providerRepository.existsByUserIdAndProvider(
+                user.getId(), UserAuthProvider.Provider.LOCAL
+        );
+        boolean needsPasswordSetup = !hasLocal;
+
+        return new CustomUserPrincipal(user, oAuth2User.getAttributes(), needsPasswordSetup);
     }
 
     private void updateUserIfNeeded(User user, OAuthUserInfo userInfo) {
         boolean updated = false;
 
-        // Update avatar if missing
         if ((user.getAvatarUrl() == null || user.getAvatarUrl().isBlank())
                 && userInfo.getAvatarUrl() != null) {
             user.setAvatarUrl(userInfo.getAvatarUrl());
             updated = true;
         }
 
-        // Update name if missing
         if ((user.getFullName() == null || user.getFullName().isBlank())
                 && userInfo.getName() != null) {
             user.setFullName(userInfo.getName());
@@ -128,116 +127,77 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         }
     }
 
-    private OAuthUserInfo extractUserInfo(
-            OAuth2UserRequest request,
-            OAuth2User oAuth2User
-    ) {
-
-        String registrationId =
-                request.getClientRegistration().getRegistrationId();
+    private OAuthUserInfo extractUserInfo(OAuth2UserRequest request, OAuth2User oAuth2User) {
+        String registrationId = request.getClientRegistration().getRegistrationId();
 
         if ("google".equals(registrationId)) {
-
-            String email = oAuth2User.getAttribute("email");
-            String name = oAuth2User.getAttribute("name");
-            String avatar = oAuth2User.getAttribute("picture");
+            String email      = oAuth2User.getAttribute("email");
+            String name       = oAuth2User.getAttribute("name");
+            String avatar     = oAuth2User.getAttribute("picture");
             String providerId = oAuth2User.getAttribute("sub");
 
             if (providerId == null) {
                 throw new OAuth2AuthenticationException("Google ID missing");
             }
-
-            return new OAuthUserInfo(
-                    email,
-                    name,
-                    avatar,
-                    providerId
-            );
+            return new OAuthUserInfo(email, name, avatar, providerId);
         }
 
         if ("github".equals(registrationId)) {
-
             Object idObj = oAuth2User.getAttribute("id");
             if (idObj == null) {
                 throw new OAuth2AuthenticationException("GitHub ID missing");
             }
 
             String providerId = idObj.toString();
-            String name = oAuth2User.getAttribute("name");
-            String avatar = oAuth2User.getAttribute("avatar_url");
-            String email = oAuth2User.getAttribute("email");
+            String name       = oAuth2User.getAttribute("name");
+            String avatar     = oAuth2User.getAttribute("avatar_url");
+            String email      = oAuth2User.getAttribute("email");
 
             if (email == null) {
-                email = fetchGithubPrimaryEmail(
-                        request.getAccessToken().getTokenValue()
-                );
+                email = fetchGithubPrimaryEmail(request.getAccessToken().getTokenValue());
             }
-
-            return new OAuthUserInfo(
-                    email,
-                    name,
-                    avatar,
-                    providerId
-            );
+            return new OAuthUserInfo(email, name, avatar, providerId);
         }
 
-        throw new OAuth2AuthenticationException(
-                "Unsupported OAuth provider: " + registrationId
-        );
+        throw new OAuth2AuthenticationException("Unsupported OAuth provider: " + registrationId);
     }
 
     private String fetchGithubPrimaryEmail(String accessToken) {
-
         RestTemplate restTemplate = new RestTemplate();
-
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(accessToken);
         headers.setAccept(List.of(MediaType.APPLICATION_JSON));
-
         HttpEntity<Void> entity = new HttpEntity<>(headers);
 
         try {
-            ResponseEntity<List<Map<String, Object>>> response =
-                    restTemplate.exchange(
-                            "https://api.github.com/user/emails",
-                            HttpMethod.GET,
-                            entity,
-                            new ParameterizedTypeReference<>() {}
-                    );
+            ResponseEntity<List<Map<String, Object>>> response = restTemplate.exchange(
+                    "https://api.github.com/user/emails",
+                    HttpMethod.GET,
+                    entity,
+                    new ParameterizedTypeReference<>() {}
+            );
 
             if (response.getBody() == null) return null;
 
             for (Map<String, Object> emailObj : response.getBody()) {
-                Boolean primary = (Boolean) emailObj.get("primary");
+                Boolean primary  = (Boolean) emailObj.get("primary");
                 Boolean verified = (Boolean) emailObj.get("verified");
-
-                if (Boolean.TRUE.equals(primary) &&
-                        Boolean.TRUE.equals(verified)) {
+                if (Boolean.TRUE.equals(primary) && Boolean.TRUE.equals(verified)) {
                     return (String) emailObj.get("email");
                 }
             }
         } catch (Exception e) {
             log.error("Failed to fetch GitHub email: {}", e.getMessage());
         }
-
         return null;
     }
 
-    private User createNewUser(
-            String email,
-            String name,
-            String avatarUrl
-    ) {
-
-        String base = name != null
-                ? name.replaceAll("[^a-zA-Z0-9]", "")
-                : "user";
-
+    private User createNewUser(String email, String name, String avatarUrl) {
+        String base = name != null ? name.replaceAll("[^a-zA-Z0-9]", "") : "user";
         if (base.isBlank()) base = "user";
 
         String username = base;
         int suffix = 1;
-
         while (userRepository.existsByUsername(username)) {
             username = base + suffix++;
         }
@@ -257,7 +217,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         return switch (registrationId) {
             case "google" -> UserAuthProvider.Provider.GOOGLE;
             case "github" -> UserAuthProvider.Provider.GITHUB;
-            default -> throw new IllegalArgumentException("Unknown provider");
+            default -> throw new IllegalArgumentException("Unknown provider: " + registrationId);
         };
     }
 }

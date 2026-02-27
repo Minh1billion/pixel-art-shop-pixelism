@@ -1,19 +1,50 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Image from "next/image";
+import { useSearchParams, useRouter } from "next/navigation";
 import LoginForm from "@/features/auth/components/LoginForm";
 import SignUpForm from "@/features/auth/components/SignUpForm";
 import ResetPasswordForm from "@/features/auth/components/ResetPasswordForm";
+import SetupPasswordForm from "@/features/auth/components/SetupPasswordForm";
+import { AuthService } from "@/features/auth/services/auth.service";
 
-export default function Entry() {
-  const [mode, setMode] = useState<"login" | "signup" | "reset">("login");
+type Mode = "login" | "signup" | "reset" | "setup-password";
+
+function EntryContent() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  const initialMode = (searchParams.get("mode") as Mode) ?? "login";
+  const [mode, setMode] = useState<Mode>(initialMode);
+
+  const providerParam = searchParams.get("provider") ?? undefined;
+
+  useEffect(() => {
+    if (initialMode === "setup-password") {
+      const user = AuthService.getCurrentUser();
+      if (!user) {
+        AuthService.fetchCurrentUser()
+          .then(() => {
+            setMode("setup-password");
+          })
+          .catch(() => {
+            router.replace("/");
+          });
+      } else {
+        setMode("setup-password");
+      }
+    }
+  }, [initialMode, router]);
+
+  const message = searchParams.get("message");
 
   return (
     <div className="flex min-h-screen">
+      {/* Left panel */}
       <div className="relative w-1/2 hidden md:block overflow-hidden">
         <Image
-          src="/main-bg.jpg"
+          src="/entry-bg-img.jpg"
           alt="Pixel background"
           fill
           className="absolute inset-0 object-cover scale-105"
@@ -71,14 +102,23 @@ export default function Entry() {
         </div>
       </div>
 
+      {/* Right panel */}
       <div className="w-full md:w-1/2 flex items-center justify-center bg-neutral-950 p-6 sm:p-8">
         <div className="w-full max-w-md">
+          {/* Mobile logo */}
           <div className="flex items-center gap-3 mb-8 md:hidden">
             <div className="relative w-8 h-8 bg-white/5 rounded-lg p-1 border border-green-400/20">
               <Image src="/pixelism.png" alt="Pixelism" width={32} height={32} className="w-full h-full object-contain" />
             </div>
             <span className="text-white font-black tracking-tight text-lg">PIXELISM</span>
           </div>
+
+          {/* Message banner */}
+          {message && (
+            <div className="mb-6 rounded-lg bg-green-500/10 border border-green-400/30 p-3 text-sm text-green-300 text-center">
+              {decodeURIComponent(message)}
+            </div>
+          )}
 
           {mode === "login" && (
             <LoginForm
@@ -92,8 +132,19 @@ export default function Entry() {
           {mode === "reset" && (
             <ResetPasswordForm onSwitchToLogin={() => setMode("login")} />
           )}
+          {mode === "setup-password" && (
+            <SetupPasswordForm providerName={providerParam} />
+          )}
         </div>
       </div>
     </div>
+  );
+}
+
+export default function Entry() {
+  return (
+    <Suspense fallback={null}>
+      <EntryContent />
+    </Suspense>
   );
 }

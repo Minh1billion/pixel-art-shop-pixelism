@@ -82,6 +82,19 @@ public class AuthController {
         );
     }
 
+    @PostMapping("/setup-password")
+    public ResponseEntity<ApiResponse<UserDto>> setupPassword(
+            @Valid @RequestBody SetupPasswordRequest request,
+            Authentication authentication) {
+
+        User currentUser = (User) authentication.getPrincipal();
+        UserDto userDto = authService.setupPassword(currentUser, request.getPassword());
+
+        return ResponseEntity.ok(
+                ApiResponse.success("Password set successfully.", userDto)
+        );
+    }
+
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<UserDto>> login(
             @Valid @RequestBody LoginRequest request,
@@ -151,5 +164,4 @@ public class AuthController {
                 ApiResponse.success(UserDto.from(user))
         );
     }
-
 }

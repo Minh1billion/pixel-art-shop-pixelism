@@ -11,9 +11,12 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriComponentsBuilder;
 import pixelart.shop.features.auth.AuthService;
 import pixelart.shop.features.auth.dto.AuthResponse;
+import pixelart.shop.features.user.entity.UserAuthProvider;
+import pixelart.shop.features.user.repository.UserAuthProviderRepository;
 import pixelart.shop.shared.util.CookieUtil;
 
 import java.io.IOException;
+import java.util.List;
 
 @Slf4j
 @Component
@@ -21,6 +24,7 @@ import java.io.IOException;
 public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
     private final AuthService authService;
+    private final UserAuthProviderRepository providerRepository;
 
     @Value("${shop.frontend.redirect-uri}")
     private String frontendUrl;
@@ -32,32 +36,44 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
             Authentication authentication
     ) throws IOException {
 
-        CustomUserPrincipal principal =
-                (CustomUserPrincipal) authentication.getPrincipal();
+        CustomUserPrincipal principal = (CustomUserPrincipal) authentication.getPrincipal();
 
-        log.info("OAuth2 authentication successful for user: {}",
-                principal.getUser().getEmail());
+        log.info("OAuth2 authentication successful for user: {}", principal.getUser().getEmail());
 
-        AuthResponse authResponse =
-                authService.buildAuthResponse(principal.getUser());
+        AuthResponse authResponse = authService.buildAuthResponse(principal.getUser());
+        CookieUtil.addAuthCookies(response, authResponse.getAccessToken(), authResponse.getRefreshToken());
 
-        CookieUtil.addAuthCookies(
-                response,
-                authResponse.getAccessToken(),
-                authResponse.getRefreshToken()
-        );
+        String targetUrl;
 
-        String targetUrl = UriComponentsBuilder
-                .fromUriString(frontendUrl + "/home")
-                .build()
-                .toUriString();
+        if (principal.isNeedsPasswordSetup()) {
+            String providerName = detectCurrentProvider(principal);
 
+            targetUrl = UriComponentsBuilder
+                    .fromUriString(frontendUrl)
+                    .queryParam("mode", "setup-password")
+                    .queryParam("provider", providerName)
+                    .build()
+                    .toUriString();
 
-        getRedirectStrategy().sendRedirect(
-                request,
-                response,
-                targetUrl
-        );
+            log.info("Redirecting to setup-password for user: {}", principal.getUser().getEmail());
+        } else {
+            targetUrl = UriComponentsBuilder
+                    .fromUriString(frontendUrl + "/home")
+                    .build()
+                    .toUriString();
+        }
+
+        getRedirectStrategy().sendRedirect(request, response, targetUrl);
     }
 
+    private String detectCurrentProvider(CustomUserPrincipal principal) {
+        List<UserAuthProvider> providers =
+                providerRepository.findByUserId(principal.getUser().getId());
+
+        return providers.stream()
+                .filter(p -> p.getProvider() != UserAuthProvider.Provider.LOCAL)
+                .map(p -> p.getProvider().name())
+                .findFirst()
+                .orElse("OAUTH");
+    }
 }

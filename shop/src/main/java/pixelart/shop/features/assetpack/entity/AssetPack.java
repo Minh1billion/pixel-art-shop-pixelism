@@ -9,6 +9,7 @@ import pixelart.shop.features.user.entity.User;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -41,14 +42,15 @@ public class AssetPack {
 
     @Column(nullable = false)
     private String cloudinaryId;
-
+    
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "asset_pack_sprites",
             joinColumns = @JoinColumn(name = "asset_pack_id"),
             inverseJoinColumns = @JoinColumn(name = "sprite_id")
     )
-    private List<Sprite> sprites;
+    @Builder.Default
+    private List<Sprite> sprites = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by", nullable = false)
@@ -62,4 +64,11 @@ public class AssetPack {
 
     @UpdateTimestamp
     private LocalDateTime updatedAt;
+
+    @PreRemove
+    private void removeFromSprites() {
+        for (Sprite sprite : sprites) {
+            sprite.getAssetPacks().remove(this);
+        }
+    }
 }

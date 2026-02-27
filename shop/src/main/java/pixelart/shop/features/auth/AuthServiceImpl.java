@@ -22,8 +22,7 @@ import pixelart.shop.shared.util.JwtUtil;
 
 import java.time.LocalDateTime;
 import java.util.List;
-
-import static jakarta.persistence.GenerationType.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -46,14 +45,26 @@ public class AuthServiceImpl implements AuthService {
         User existingUser = userRepository.findByEmail(email).orElse(null);
 
         if (existingUser != null) {
-            boolean hasLocal = providerRepository
-                    .existsByUserIdAndProvider(
-                            existingUser.getId(),
-                            UserAuthProvider.Provider.LOCAL
-                    );
+            List<UserAuthProvider> providers = providerRepository.findByUserId(existingUser.getId());
+
+            boolean hasLocal = providers.stream()
+                    .anyMatch(p -> p.getProvider() == UserAuthProvider.Provider.LOCAL);
 
             if (hasLocal) {
                 throw AppException.conflict("Email already has local account. Please use reset password instead.");
+            }
+
+            List<String> oauthProviders = providers.stream()
+                    .filter(p -> p.getProvider() != UserAuthProvider.Provider.LOCAL)
+                    .map(p -> p.getProvider().name())
+                    .collect(Collectors.toList());
+
+            if (!oauthProviders.isEmpty()) {
+                String providerList = String.join(", ", oauthProviders);
+                throw new AppException(
+                        HttpStatus.CONFLICT,
+                        "OAUTH_ACCOUNT_EXISTS:" + providerList
+                );
             }
         }
 
@@ -215,6 +226,33 @@ public class AuthServiceImpl implements AuthService {
         }
 
         return buildAuthResponse(user);
+    }
+
+    @Override
+    public UserDto setupPassword(User currentUser, String password) {
+
+        boolean hasLocal = providerRepository
+                .existsByUserIdAndProvider(
+                        currentUser.getId(),
+                        UserAuthProvider.Provider.LOCAL
+                );
+
+        if (hasLocal) {
+            throw AppException.conflict("Password already set. Use reset password to change it.");
+        }
+
+        currentUser.setPassword(passwordEncoder.encode(password));
+        userRepository.save(currentUser);
+
+        UserAuthProvider localProvider = UserAuthProvider.builder()
+                .user(currentUser)
+                .provider(UserAuthProvider.Provider.LOCAL)
+                .providerId(currentUser.getEmail())
+                .build();
+
+        providerRepository.save(localProvider);
+
+        return UserDto.from(currentUser);
     }
 
     @Override

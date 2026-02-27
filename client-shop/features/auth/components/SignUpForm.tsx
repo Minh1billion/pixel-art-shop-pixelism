@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useRegister } from "@/features/auth/hooks/useRegister";
 
 interface SignUpFormProps {
@@ -17,14 +18,22 @@ export default function SignUpForm({ onSwitchToLogin }: SignUpFormProps) {
   const [otp, setOtp] = useState("");
 
   const { sendOtp, register, loading, error } = useRegister();
+  const router = useRouter();
 
   const handleSendEmail = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       await sendOtp(email);
       setStep("verify");
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      const message: string = err?.message ?? "";
+      if (message.startsWith("OAUTH_ACCOUNT_EXISTS:")) {
+        const providers = message.replace("OAUTH_ACCOUNT_EXISTS:", "");
+        const friendlyMessage = encodeURIComponent(
+          `This email is already linked to ${providers}. Please sign in using that method.`
+        );
+        router.push(`/?message=${friendlyMessage}`);
+      }
     }
   };
 
@@ -43,7 +52,7 @@ export default function SignUpForm({ onSwitchToLogin }: SignUpFormProps) {
         Forge Your Legend
       </h1>
 
-      {error && (
+      {error && !error.startsWith("OAUTH_ACCOUNT_EXISTS") && (
         <div className="mb-4 rounded-lg bg-red-500/10 border border-red-500/40 p-3 text-sm text-red-400">
           {error}
         </div>

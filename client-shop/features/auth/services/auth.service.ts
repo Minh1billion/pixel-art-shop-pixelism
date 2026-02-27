@@ -79,6 +79,21 @@ export class AuthService {
         }
     }
 
+    static async setupPassword(password: string): Promise<void> {
+        try {
+            const response = await api.post<ApiResponse<AuthResponse["user"]>>(
+                "/auth/setup-password",
+                { password }
+            );
+            if (!response.data.success) throw new Error(response.data.message);
+            if (response.data.data) {
+                localStorage.setItem("user", JSON.stringify(response.data.data));
+            }
+        } catch (error: any) {
+            throw new Error(error.response?.data?.message ?? error.message);
+        }
+    }
+
     static async logout(): Promise<void> {
         try {
             await api.post("/auth/logout");
