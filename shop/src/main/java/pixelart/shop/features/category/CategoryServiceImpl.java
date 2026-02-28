@@ -24,7 +24,6 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     @Transactional(readOnly = true)
-    @Cacheable(value = "categories")
     public List<CategoryResponse> getAll() {
         return categoryRepository.findAll()
                 .stream()
@@ -41,7 +40,6 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    @CacheEvict(value = "categories", allEntries = true)
     public CategoryResponse create(CategoryRequest request) {
         if (categoryRepository.existsByName(request.name())) {
             throw AppException.conflict("Category name already exists.");
@@ -58,7 +56,6 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    @CacheEvict(value = "categories", allEntries = true)
     public CategoryResponse update(UUID id, CategoryRequest request) {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> AppException.notFound("Category does not exist"));
@@ -71,7 +68,6 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    @CacheEvict(value = "categories", allEntries = true)
     public void delete(UUID id) {
         if (!categoryRepository.existsById(id)) {
             throw AppException.notFound("Category does not exist");
