@@ -5,10 +5,16 @@ export interface ApiResponse<T> {
 }
 
 export interface PageResponse<T> {
-  content: T[];
-  totalElements: number;
-  totalPages: number;
-  number: number;
-  size: number;
-  last: boolean;
+    content: T[];
+    number: number;
+    size: number;
+    totalElements: number;
+    totalPages: number;
+
+    page?: {
+        size: number;
+        number: number;
+        totalElements: number;
+        totalPages: number;
+    };
 }

@@ -7,6 +7,19 @@ import type {
 } from "@/features/sprite/types";
 import type { ApiResponse, PageResponse } from "@/features/shared/components/types";
 
+function normalizePage<T>(data: PageResponse<T>): PageResponse<T> {
+    if (data.page) {
+        return {
+            ...data,
+            number: data.page.number,
+            size: data.page.size,
+            totalElements: data.page.totalElements,
+            totalPages: data.page.totalPages,
+        };
+    }
+    return data;
+}
+
 export class SpriteService {
     static async getSprites(
         filter: SpriteFilterRequest,
@@ -19,7 +32,7 @@ export class SpriteService {
                 { params: { ...filter, page, size } }
             );
             if (!response.data.success) throw new Error(response.data.message);
-            return response.data.data;
+            return normalizePage(response.data.data);
         } catch (error: any) {
             throw new Error(error.response?.data?.message ?? error.message);
         }
@@ -36,7 +49,7 @@ export class SpriteService {
                 { params: { ...filter, page, size } }
             );
             if (!response.data.success) throw new Error(response.data.message);
-            return response.data.data;
+            return normalizePage(response.data.data);
         } catch (error: any) {
             throw new Error(error.response?.data?.message ?? error.message);
         }
@@ -54,7 +67,7 @@ export class SpriteService {
                 { params: { ...filter, page, size } }
             );
             if (!response.data.success) throw new Error(response.data.message);
-            return response.data.data;
+            return normalizePage(response.data.data);
         } catch (error: any) {
             throw new Error(error.response?.data?.message ?? error.message);
         }
@@ -70,7 +83,7 @@ export class SpriteService {
                 { params: { page, size } }
             );
             if (!response.data.success) throw new Error(response.data.message);
-            return response.data.data;
+            return normalizePage(response.data.data);
         } catch (error: any) {
             throw new Error(error.response?.data?.message ?? error.message);
         }

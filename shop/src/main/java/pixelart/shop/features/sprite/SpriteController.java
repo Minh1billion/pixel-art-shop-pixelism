@@ -40,7 +40,7 @@ public class SpriteController {
     public ResponseEntity<ApiResponse<Page<SpriteListResponse>>> getMySprites(
             SpriteFilterRequest filter,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "12") int size,
+            @RequestParam(defaultValue = "42") int size,
             @AuthenticationPrincipal User currentUser
     ) {
         return ResponseEntity.ok(ApiResponse.success(
@@ -53,7 +53,7 @@ public class SpriteController {
     public ResponseEntity<ApiResponse<Page<SpriteListResponse>>> getSpritesByUser(
             SpriteFilterRequest filter,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "12") int size,
+            @RequestParam(defaultValue = "42") int size,
             @PathVariable UUID userId
     ) {
         return ResponseEntity.ok(ApiResponse.success(
