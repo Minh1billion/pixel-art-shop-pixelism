@@ -2,10 +2,9 @@ package pixelart.shop.features.assetpack;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +18,7 @@ import pixelart.shop.features.assetpack.repository.AssetPackSpecification;
 import pixelart.shop.features.sprite.entity.Sprite;
 import pixelart.shop.features.sprite.repository.SpriteRepository;
 import pixelart.shop.features.user.entity.User;
+import pixelart.shop.shared.dto.RestPage;
 import pixelart.shop.shared.exception.AppException;
 import pixelart.shop.shared.infrastructure.storage.FileStorage;
 import pixelart.shop.shared.infrastructure.storage.UploadResult;
@@ -39,20 +39,20 @@ public class AssetPackServiceImpl implements AssetPackService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(
+            value = "asset-packs",
+            key = "{#filter.keyword, #filter.categoryIds, #filter.minPrice, #filter.maxPrice, #filter.sortBy, #filter.sortOrder, #page, #size}"
+    )
     public Page<AssetPackResponse> getAll(AssetPackFilterRequest filter, int page, int size) {
-
         Sort sort = Sort.unsorted();
-
         if (filter.sortBy() != null && !filter.sortBy().isBlank()) {
-            Sort.Direction direction =
-                    "desc".equalsIgnoreCase(filter.sortOrder())
-                            ? Sort.Direction.DESC
-                            : Sort.Direction.ASC;
+            Sort.Direction direction = "desc".equalsIgnoreCase(filter.sortOrder())
+                    ? Sort.Direction.DESC
+                    : Sort.Direction.ASC;
             sort = Sort.by(direction, filter.sortBy());
         }
 
         Pageable pageable = PageRequest.of(page, size, sort);
-
         Specification<AssetPack> spec = AssetPackSpecification.filter(
                 filter.keyword(),
                 filter.categoryIds(),
@@ -60,12 +60,17 @@ public class AssetPackServiceImpl implements AssetPackService {
                 filter.maxPrice()
         );
 
-        return assetPackRepository.findAll(spec, pageable)
+        Page<AssetPackResponse> result = assetPackRepository.findAll(spec, pageable)
                 .map(AssetPackResponse::from);
+        return new RestPage<>(result.getContent(), result.getNumber(), result.getSize(), result.getTotalElements());
     }
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(
+            value = "asset-packs:detail",
+            key = "#id"
+    )
     public AssetPackResponse getById(UUID id) {
         return assetPackRepository
                 .findByIdAndActive(id)
@@ -74,12 +79,8 @@ public class AssetPackServiceImpl implements AssetPackService {
     }
 
     @Override
-    public AssetPackResponse create(
-            AssetPackRequest request,
-            MultipartFile image,
-            User currentUser
-    ) throws IOException {
-
+    @CacheEvict(value = {"asset-packs", "asset-packs:detail"}, allEntries = true)
+    public AssetPackResponse create(AssetPackRequest request, MultipartFile image, User currentUser) throws IOException {
         List<Sprite> sprites = resolveSprites(request.spriteIds());
 
         UploadResult uploadResult = uploadImage(image);
@@ -98,8 +99,8 @@ public class AssetPackServiceImpl implements AssetPackService {
     }
 
     @Override
+    @CacheEvict(value = {"asset-packs", "asset-packs:detail"}, allEntries = true)
     public AssetPackResponse update(UUID id, AssetPackRequest request, MultipartFile image) throws IOException {
-
         AssetPack pack = assetPackRepository
                 .findById(id)
                 .orElseThrow(() -> AppException.notFound("Asset pack does not exist"));
@@ -124,11 +125,13 @@ public class AssetPackServiceImpl implements AssetPackService {
     }
 
     @Override
+    @CacheEvict(value = {"asset-packs", "asset-packs:detail"}, allEntries = true)
     public void delete(UUID id) {
-        Sprite sprite = spriteRepository.findById(id)
-                .orElseThrow(() -> AppException.notFound("Sprite does not exist"));
-        sprite.softDelete();
-        spriteRepository.save(sprite);
+        AssetPack pack = assetPackRepository
+                .findById(id)
+                .orElseThrow(() -> AppException.notFound("Asset pack does not exist"));
+        pack.softDelete();
+        assetPackRepository.save(pack);
     }
 
     private List<Sprite> resolveSprites(List<UUID> spriteIds) {

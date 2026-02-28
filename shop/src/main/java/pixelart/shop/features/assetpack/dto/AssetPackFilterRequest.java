@@ -7,7 +7,7 @@ import java.util.UUID;
 public record AssetPackFilterRequest(
 
         String keyword,
-        List<UUID> categoryIds,  // filter packs that contain sprites with these categories
+        List<UUID> categoryIds,
         BigDecimal minPrice,
         BigDecimal maxPrice,
         String sortBy,
