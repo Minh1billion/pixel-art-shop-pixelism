@@ -208,9 +208,6 @@ public class SpriteServiceImpl implements SpriteService {
                 .trim()
                 .replaceAll("\\s+", "-");
 
-        String slug = baseSlug;
-        int counter = 1;
-
         String slug = baseSlug + "-" + UUID.randomUUID().toString().substring(0, 8);
 
         return slug;
