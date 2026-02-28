@@ -80,7 +80,7 @@ export function ProfileForm({ user, onSuccess, onError }: ProfileFormProps) {
             <GiScrollUnfurled className="w-4 h-4 text-green-400" />
           </div>
           <div>
-            <h2 className="text-sm font-bold text-white leading-none">Adventurer's Dossier</h2>
+            <h2 className="text-sm font-bold text-white leading-none">Adventurer&apos;s Dossier</h2>
             <p className="text-[10px] text-green-400/40 tracking-widest uppercase mt-0.5">
               {editing ? "Inscribing your legend..." : "Inscribe your legend"}
             </p>

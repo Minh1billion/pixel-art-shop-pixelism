@@ -4,7 +4,7 @@ interface CloudinaryLoaderParams {
   quality?: number;
 }
 
-export default function cloudinaryLoader({ src, width, quality }: CloudinaryLoaderParams): string {
+export default function cloudinaryLoader({ src, width, quality: _quality }: CloudinaryLoaderParams): string {
   if (!src.includes("res.cloudinary.com")) {
     return src;
   }
