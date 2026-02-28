@@ -70,7 +70,6 @@ public class SpriteServiceImpl implements SpriteService {
     @Override
     @Transactional(readOnly = true)
     public Page<SpriteListResponse> getTrash(int page, int size, User currentUser, boolean isAdmin) {
-        // ADMIN thấy tất cả inactive, user thường chỉ thấy của mình
         User filterUser = isAdmin ? null : currentUser;
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "updatedAt"));
         Specification<Sprite> spec = SpriteSpecification.trash(filterUser);
@@ -212,9 +211,7 @@ public class SpriteServiceImpl implements SpriteService {
         String slug = baseSlug;
         int counter = 1;
 
-        while (spriteRepository.existsBySlug(slug)) {
-            slug = baseSlug + "-" + counter++;
-        }
+        String slug = baseSlug + "-" + UUID.randomUUID().toString().substring(0, 8);
 
         return slug;
     }

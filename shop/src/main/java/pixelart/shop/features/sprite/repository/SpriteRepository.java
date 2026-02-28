@@ -27,6 +27,5 @@ public interface SpriteRepository extends JpaRepository<Sprite, UUID>, JpaSpecif
     @Query("SELECT s FROM Sprite s WHERE s.id = :id")
     Optional<Sprite> findWithDetailsById(UUID id);
 
-    @EntityGraph(attributePaths = {"categories", "createdBy"})
     Page<Sprite> findAll(Specification<Sprite> spec, Pageable pageable);
 }
