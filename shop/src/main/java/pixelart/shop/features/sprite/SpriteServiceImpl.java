@@ -4,10 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +20,7 @@ import pixelart.shop.features.sprite.repository.SpriteRepository;
 import pixelart.shop.features.sprite.repository.SpriteSpecification;
 import pixelart.shop.features.user.entity.User;
 import pixelart.shop.features.user.repository.UserRepository;
+import pixelart.shop.shared.dto.RestPage;
 import pixelart.shop.shared.exception.AppException;
 import pixelart.shop.shared.infrastructure.storage.FileStorage;
 import pixelart.shop.shared.infrastructure.storage.UploadResult;
@@ -51,7 +49,9 @@ public class SpriteServiceImpl implements SpriteService {
     public Page<SpriteListResponse> getAll(SpriteFilterRequest filter, int page, int size) {
         Pageable pageable = buildPageable(filter, page, size);
         Specification<Sprite> spec = SpriteSpecification.filter(filter.categoryIds(), filter.keyword(), null);
-        return spriteRepository.findAll(spec, pageable).map(SpriteListResponse::from);
+        return new RestPage<>(
+                (PageImpl<SpriteListResponse>) spriteRepository.findAll(spec, pageable).map(SpriteListResponse::from)
+        );
     }
 
     @Override
