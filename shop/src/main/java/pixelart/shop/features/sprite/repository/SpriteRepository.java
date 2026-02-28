@@ -18,8 +18,6 @@ import java.util.UUID;
 @Repository
 public interface SpriteRepository extends JpaRepository<Sprite, UUID>, JpaSpecificationExecutor<Sprite> {
 
-    boolean existsBySlug(String slug);
-
     @Query("SELECT s FROM Sprite s WHERE s.deletedAt IS NOT NULL AND s.deletedAt < :cutoffDate")
     List<Sprite> findInactiveBefore(LocalDateTime cutoffDate);
 
