@@ -20,6 +20,5 @@ public interface AssetPackRepository extends JpaRepository<AssetPack, UUID>, Jpa
     @Query("SELECT a FROM AssetPack a WHERE a.id = :id AND a.deletedAt IS NULL")
     Optional<AssetPack> findByIdAndActive(UUID id);
 
-    @EntityGraph(attributePaths = {"sprites", "sprites.categories", "createdBy"})
     Page<AssetPack> findAll(Specification<AssetPack> spec, Pageable pageable);
 }
