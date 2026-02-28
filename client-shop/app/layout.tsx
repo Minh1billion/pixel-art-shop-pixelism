@@ -26,6 +26,7 @@ export default function RootLayout({
       <head>
         <link rel="preconnect" href="https://res.cloudinary.com" />
         <link rel="preconnect" href="https://lh3.googleusercontent.com" />
+        <link rel="preconnect" href="https://lh3.githubusercontent.com" />
       </head>
       <body className="antialiased">
         <AuthProvider>

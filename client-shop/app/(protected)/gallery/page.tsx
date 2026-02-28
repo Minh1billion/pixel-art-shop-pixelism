@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useState, useEffect, useCallback } from "react";
 import { HiOutlineTrash } from "react-icons/hi2";
+import { GiSpellBook, GiCrystalBall, GiScrollUnfurled, GiSwordman } from "react-icons/gi";
 import { useSpriteFilter } from "@/features/sprite/hooks/useSpriteFilter";
 import { usePagination } from "@/features/sprite/hooks/usePagination";
 import { useSprites } from "@/features/sprite/hooks/useSprites";
@@ -23,6 +24,17 @@ import type { SpriteListResponse } from "@/features/sprite/types";
 import type { UserListResponse } from "@/features/user/types";
 
 type Tab = "mine" | "all" | "byUser";
+
+// Decorative rune divider
+function RuneSeparator() {
+    return (
+        <div className="flex items-center gap-2 my-2">
+            <div className="flex-1 h-px bg-linear-to-r from-transparent to-green-400/20" />
+            <span className="text-green-400/30 text-[9px] tracking-[0.4em] select-none">ᚱᚢᚾᛖ</span>
+            <div className="flex-1 h-px bg-linear-to-l from-transparent to-green-400/20" />
+        </div>
+    );
+}
 
 export default function GalleryPage() {
     const { user } = useAuth();
@@ -49,9 +61,7 @@ export default function GalleryPage() {
 
     const active = tab === "all" ? allSprites : tab === "mine" ? mySprites : userSprites;
 
-    useEffect(() => {
-        resetPage();
-    }, [filter, tab, selectedUser, resetPage]);
+    useEffect(() => { resetPage(); }, [filter, tab, selectedUser, resetPage]);
 
     const handleTabChange = useCallback((nextTab: Tab) => {
         setTab(nextTab);
@@ -90,83 +100,111 @@ export default function GalleryPage() {
 
     return (
         <div className="min-h-screen bg-neutral-950 text-white">
-            <div className="w-full px-4 sm:px-6 lg:px-8 py-10">
+            {/* Ambient top glow */}
+            <div className="fixed top-0 left-1/2 -translate-x-1/2 w-150 h-48 bg-green-500/5 blur-3xl rounded-full pointer-events-none" />
 
+            <div className="w-full px-4 sm:px-6 lg:px-8 py-10 relative">
+
+                {/* Page header */}
                 <div className="mb-8 flex items-start justify-between gap-4">
                     <div>
+                        <div className="flex items-center gap-2 mb-1">
+                            <GiSpellBook className="w-5 h-5 text-green-400/60" />
+                            <span className="text-green-400/40 text-[10px] tracking-[0.35em] uppercase font-medium">
+                                Sacred Visual Archives
+                            </span>
+                        </div>
                         <h1 className="text-2xl font-bold text-white tracking-tight">
-                            Sprite <span className="text-green-400">Store</span>
+                            The <span className="text-green-400">Sanctum</span>
                         </h1>
-                        <p className="text-slate-400 text-sm mt-1">
-                            {isAdmin ? "Manage and browse all sprites" : "Browse and manage your sprites"}
+                        <p className="text-neutral-500 text-sm mt-1">
+                            {isAdmin
+                                ? "Oversee all relics forged within the realm"
+                                : "Your collected relics & pixel enchantments"}
                         </p>
                     </div>
+
                     <div className="flex items-center gap-2 shrink-0">
                         <button
                             onClick={() => setTrashOpen(true)}
-                            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm border border-neutral-800 text-gray-500 hover:text-red-400 hover:border-red-500/30 hover:bg-red-500/5 transition-all"
+                            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm border border-neutral-800 text-neutral-500 hover:text-red-400 hover:border-red-500/30 hover:bg-red-500/5 transition-all"
+                            title="Cursed relics — items banished from the Sanctum"
                         >
                             <HiOutlineTrash className="w-4 h-4" />
-                            <span className="hidden sm:inline">Trash</span>
+                            <span className="hidden sm:inline text-xs">Void</span>
                         </button>
                         <button
                             onClick={openCreate}
-                            className="px-4 py-2 rounded-lg text-sm font-medium bg-green-500 hover:bg-green-400 text-black transition-colors"
+                            className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium bg-green-500 hover:bg-green-400 text-black transition-colors"
                         >
-                            + Upload Sprite
+                            <span className="text-base leading-none">✦</span>
+                            <span>Enshrine Relic</span>
                         </button>
                     </div>
                 </div>
 
-                <div className="flex items-center gap-1 bg-neutral-900 border border-green-900/20 rounded-xl p-1 w-fit mb-8">
+                {/* Tab switcher */}
+                <div className="flex items-center gap-1 bg-neutral-900/80 border border-green-900/20 rounded-xl p-1 w-fit mb-8">
                     {isAdmin ? (
                         <>
                             <button
                                 onClick={() => handleTabChange("all")}
-                                className={`px-4 py-1.5 rounded-lg text-sm transition-all ${tab === "all"
-                                    ? "bg-green-500/20 text-green-300 border border-green-500/30"
-                                    : "text-gray-400 hover:text-white"}`}
+                                className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs transition-all ${
+                                    tab === "all"
+                                        ? "bg-green-500/20 text-green-300 border border-green-500/30"
+                                        : "text-neutral-400 hover:text-white"
+                                }`}
                             >
-                                All Sprites
+                                <GiCrystalBall className="w-3 h-3" />
+                                All Relics
                             </button>
                             <button
                                 onClick={() => handleTabChange("byUser")}
-                                className={`px-4 py-1.5 rounded-lg text-sm transition-all ${tab === "byUser"
-                                    ? "bg-yellow-500/20 text-yellow-300 border border-yellow-500/30"
-                                    : "text-gray-400 hover:text-white"}`}
+                                className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs transition-all ${
+                                    tab === "byUser"
+                                        ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                                        : "text-neutral-400 hover:text-white"
+                                }`}
                             >
-                                By User
+                                <GiSwordman className="w-3 h-3" />
+                                By Adventurer
                             </button>
                         </>
                     ) : (
                         <button
                             onClick={() => handleTabChange("mine")}
-                            className={`px-4 py-1.5 rounded-lg text-sm transition-all ${tab === "mine"
-                                ? "bg-green-500/20 text-green-300 border border-green-500/30"
-                                : "text-gray-400 hover:text-white"}`}
+                            className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs transition-all ${
+                                tab === "mine"
+                                    ? "bg-green-500/20 text-green-300 border border-green-500/30"
+                                    : "text-neutral-400 hover:text-white"
+                            }`}
                         >
-                            My Sprites
+                            <GiScrollUnfurled className="w-3 h-3" />
+                            My Relics
                         </button>
                     )}
                 </div>
 
+                {/* Main content */}
                 <div className="flex flex-col lg:flex-row gap-6">
+
+                    {/* Sidebar */}
                     <div className="lg:w-60 xl:w-64 shrink-0 self-start sticky top-22">
                         {tab === "byUser" && isAdmin && (
                             <div className="space-y-2 mb-4">
-                                <label className="text-xs text-gray-500 uppercase tracking-wider">
-                                    Select User
+                                <label className="text-[10px] text-green-400/40 uppercase tracking-[0.25em]">
+                                    ⚔ Seek Adventurer
                                 </label>
                                 <input
                                     type="text"
-                                    placeholder="Search users..."
+                                    placeholder="Search by name or oath..."
                                     value={userKeyword}
                                     onChange={(e) => setUserKeyword(e.target.value)}
-                                    className="w-full bg-neutral-900 border border-green-900/20 rounded-xl px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-green-500/40 transition-colors"
+                                    className="w-full bg-neutral-900 border border-green-900/20 rounded-xl px-3 py-2 text-sm text-white placeholder-neutral-600 focus:outline-none focus:border-green-500/40 transition-colors"
                                 />
                                 <div className="max-h-48 overflow-y-auto rounded-xl border border-green-900/20 bg-neutral-900 divide-y divide-green-900/10">
                                     {usersLoading && (
-                                        <p className="text-xs text-gray-500 p-3">Loading...</p>
+                                        <p className="text-xs text-neutral-500 p-3 italic">Consulting the oracle...</p>
                                     )}
                                     {usersData?.content.map((u) => (
                                         <button
@@ -184,22 +222,23 @@ export default function GalleryPage() {
                                                 <p className={`text-xs font-medium truncate ${selectedUser?.id === u.id ? "text-green-300" : "text-white"}`}>
                                                     {u.username}
                                                 </p>
-                                                <p className="text-xs text-gray-500 truncate">{u.email}</p>
+                                                <p className="text-[10px] text-neutral-500 truncate">{u.email}</p>
                                             </div>
                                         </button>
                                     ))}
                                     {!usersLoading && usersData?.content.length === 0 && (
-                                        <p className="text-xs text-gray-600 p-3">No users found.</p>
+                                        <p className="text-xs text-neutral-600 p-3 italic">No adventurers found in the registry.</p>
                                     )}
                                 </div>
                                 {selectedUser && (
                                     <button
                                         onClick={() => setSelectedUser(null)}
-                                        className="text-xs text-gray-500 hover:text-red-400 transition-colors"
+                                        className="text-[10px] text-neutral-500 hover:text-red-400 transition-colors"
                                     >
-                                        Clear selection
+                                        ✕ Release selection
                                     </button>
                                 )}
+                                <RuneSeparator />
                             </div>
                         )}
 
@@ -212,22 +251,25 @@ export default function GalleryPage() {
                         />
                     </div>
 
+                    {/* Grid area */}
                     <div className="flex-1 min-w-0 space-y-6">
                         {tab === "byUser" && !selectedUser ? (
                             <div className="flex flex-col items-center justify-center py-24 text-center">
-                                <div className="text-4xl mb-4">👤</div>
-                                <p className="text-gray-500 text-sm">Select a user to view their sprites.</p>
+                                <GiSwordman className="w-12 h-12 text-neutral-700 mb-4" />
+                                <p className="text-neutral-500 text-sm">Choose an adventurer to unveil their relics.</p>
+                                <p className="text-neutral-700 text-xs mt-1 tracking-widest">✦ ✦ ✦</p>
                             </div>
                         ) : (
                             <>
                                 {active.data && !active.loading && (
                                     <div className="flex items-center gap-2">
-                                        <p className="text-xs text-slate-400">
-                                            {active.data.totalElements} sprite{active.data.totalElements !== 1 ? "s" : ""} found
+                                        <p className="text-xs text-neutral-500">
+                                            <span className="text-green-400/70 font-medium">{active.data.totalElements}</span>
+                                            {" "}relic{active.data.totalElements !== 1 ? "s" : ""} enshrined
                                         </p>
                                         {tab === "byUser" && selectedUser && (
-                                            <span className="text-xs text-yellow-400/70">
-                                                — {selectedUser.username}
+                                            <span className="text-xs text-amber-400/60">
+                                                — bound to <span className="text-amber-300/80">{selectedUser.username}</span>
                                             </span>
                                         )}
                                     </div>
