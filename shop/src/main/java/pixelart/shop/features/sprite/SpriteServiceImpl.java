@@ -2,6 +2,7 @@ package pixelart.shop.features.sprite;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -42,6 +43,7 @@ public class SpriteServiceImpl implements SpriteService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "sprites", key = "#filter + #page + #size")
     public Page<SpriteListResponse> getAll(SpriteFilterRequest filter, int page, int size) {
         Pageable pageable = buildPageable(filter, page, size);
         Specification<Sprite> spec = SpriteSpecification.filter(filter.categoryIds(), filter.keyword(), null);
