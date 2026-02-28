@@ -7,7 +7,7 @@ CREATE EXTENSION IF NOT EXISTS pg_trgm;
 -- SPRITES
 -- ================================================
 
--- Filter active sprites, sort by created_at (query phổ biến nhất)
+-- Filter active sprites, sort by created_at
 CREATE INDEX idx_sprite_active_created_at 
     ON sprites (created_at DESC) 
     WHERE deleted_at IS NULL;
@@ -22,7 +22,7 @@ CREATE INDEX idx_sprite_deleted_at
     ON sprites (deleted_at) 
     WHERE deleted_at IS NOT NULL;
 
--- Full-text search tên sprite (pg_trgm cho ILIKE)
+-- Full-text search
 CREATE INDEX idx_sprite_name_trgm 
     ON sprites USING GIN (name gin_trgm_ops);
 
@@ -30,15 +30,15 @@ CREATE INDEX idx_sprite_name_trgm
 -- SPRITE_CATEGORIES (join table)
 -- ================================================
 
--- Lookup sprites theo category
+-- Lookup sprites by category
 CREATE INDEX idx_sprite_category_category 
     ON sprite_categories (category_id);
 
--- Lookup categories theo sprite
+-- Lookup categories by sprite
 CREATE INDEX idx_sprite_category_sprite 
     ON sprite_categories (sprite_id);
 
--- Composite cho JOIN + filter đồng thời
+-- Composite cho JOIN + filter 
 CREATE INDEX idx_sprite_category_composite 
     ON sprite_categories (category_id, sprite_id);
 
@@ -61,7 +61,7 @@ CREATE INDEX idx_asset_pack_deleted_at
     ON asset_pack (deleted_at) 
     WHERE deleted_at IS NOT NULL;
 
--- Full-text search tên asset pack
+-- Full-text search on asset pack
 CREATE INDEX idx_asset_pack_name_trgm 
     ON asset_pack USING GIN (name gin_trgm_ops);
 
@@ -90,7 +90,7 @@ CREATE INDEX idx_user_email
 -- REFRESH_TOKENS
 -- ================================================
 
--- Lookup token khi refresh
+-- Lookup token by refresh
 CREATE INDEX idx_refresh_token_token 
     ON refresh_tokens (token);
 
