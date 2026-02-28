@@ -63,6 +63,8 @@ public class RedisConfig {
                         defaultConfig.entryTtl(Duration.ofMinutes(5)))
                 .withCacheConfiguration("asset-packs:detail",
                         defaultConfig.entryTtl(Duration.ofMinutes(10)))
+                .withCacheConfiguration("categories",
+                        defaultConfig.entryTtl(Duration.ofMinutes(30)))
                 .build();
     }
 }

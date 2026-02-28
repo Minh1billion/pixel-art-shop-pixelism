@@ -1,6 +1,8 @@
 package pixelart.shop.features.category;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pixelart.shop.features.category.dto.CategoryRequest;
@@ -22,6 +24,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "categories")
     public List<CategoryResponse> getAll() {
         return categoryRepository.findAll()
                 .stream()
@@ -33,11 +36,12 @@ public class CategoryServiceImpl implements CategoryService {
     @Transactional(readOnly = true)
     public CategoryResponse getById(UUID id) {
         Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> AppException.notFound("Category name already exists."));
+                .orElseThrow(() -> AppException.notFound("Category does not exist"));
         return CategoryResponse.from(category);
     }
 
     @Override
+    @CacheEvict(value = "categories", allEntries = true)
     public CategoryResponse create(CategoryRequest request) {
         if (categoryRepository.existsByName(request.name())) {
             throw AppException.conflict("Category name already exists.");
@@ -50,12 +54,11 @@ public class CategoryServiceImpl implements CategoryService {
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        return CategoryResponse.from(
-                categoryRepository.save(category)
-        );
+        return CategoryResponse.from(categoryRepository.save(category));
     }
 
     @Override
+    @CacheEvict(value = "categories", allEntries = true)
     public CategoryResponse update(UUID id, CategoryRequest request) {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> AppException.notFound("Category does not exist"));
@@ -64,12 +67,11 @@ public class CategoryServiceImpl implements CategoryService {
         category.setSlug(generateSlug(request.name()));
         category.setDescription(request.description());
 
-        return CategoryResponse.from(
-                categoryRepository.save(category)
-        );
+        return CategoryResponse.from(categoryRepository.save(category));
     }
 
     @Override
+    @CacheEvict(value = "categories", allEntries = true)
     public void delete(UUID id) {
         if (!categoryRepository.existsById(id)) {
             throw AppException.notFound("Category does not exist");
