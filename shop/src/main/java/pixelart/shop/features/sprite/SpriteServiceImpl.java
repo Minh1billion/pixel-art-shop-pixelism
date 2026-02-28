@@ -2,6 +2,7 @@ package pixelart.shop.features.sprite;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -43,11 +44,28 @@ public class SpriteServiceImpl implements SpriteService {
 
     @Override
     @Transactional(readOnly = true)
-    @Cacheable(value = "sprites", key = "#filter + #page + #size")
+    @Cacheable(
+            value = "sprites",
+            key = "{#filter.keyword, #filter.categoryIds, #filter.sortBy, #filter.sortOrder, #page, #size}"
+    )
     public Page<SpriteListResponse> getAll(SpriteFilterRequest filter, int page, int size) {
         Pageable pageable = buildPageable(filter, page, size);
         Specification<Sprite> spec = SpriteSpecification.filter(filter.categoryIds(), filter.keyword(), null);
         return spriteRepository.findAll(spec, pageable).map(SpriteListResponse::from);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    @Cacheable(
+            value = "sprites:detail",
+            key = "#id"
+    )
+    public SpriteResponse getById(UUID id) {
+        return spriteRepository
+                .findWithDetailsById(id)
+                .filter(Sprite::isActive)
+                .map(SpriteResponse::from)
+                .orElseThrow(() -> AppException.notFound("Sprite does not exist"));
     }
 
     @Override
@@ -79,16 +97,7 @@ public class SpriteServiceImpl implements SpriteService {
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public SpriteResponse getById(UUID id) {
-        return spriteRepository
-                .findWithDetailsById(id)
-                .filter(Sprite::isActive)
-                .map(SpriteResponse::from)
-                .orElseThrow(() -> AppException.notFound("Sprite does not exist"));
-    }
-
-    @Override
+    @CacheEvict(value = {"sprites", "sprites:detail"}, allEntries = true)
     public SpriteResponse create(SpriteRequest request, MultipartFile image, User currentUser) throws IOException {
         List<Category> categories = categoryRepository.findAllById(request.categoryIds());
 
@@ -111,6 +120,7 @@ public class SpriteServiceImpl implements SpriteService {
     }
 
     @Override
+    @CacheEvict(value = {"sprites", "sprites:detail"}, allEntries = true)
     public SpriteResponse update(UUID id, SpriteRequest request, MultipartFile image) throws IOException {
         Sprite sprite = spriteRepository
                 .findWithDetailsById(id)
@@ -138,6 +148,7 @@ public class SpriteServiceImpl implements SpriteService {
     }
 
     @Override
+    @CacheEvict(value = {"sprites", "sprites:detail"}, allEntries = true)
     public void delete(UUID id) throws IOException {
         Sprite sprite = spriteRepository
                 .findById(id)
@@ -148,6 +159,7 @@ public class SpriteServiceImpl implements SpriteService {
     }
 
     @Override
+    @CacheEvict(value = {"sprites", "sprites:detail"}, allEntries = true)
     public void hardDelete(UUID id) throws IOException {
         Sprite sprite = spriteRepository
                 .findById(id)
@@ -165,6 +177,7 @@ public class SpriteServiceImpl implements SpriteService {
     }
 
     @Override
+    @CacheEvict(value = {"sprites", "sprites:detail"}, allEntries = true)
     public SpriteResponse restore(UUID id) {
         Sprite sprite = spriteRepository
                 .findWithDetailsById(id)
@@ -210,8 +223,6 @@ public class SpriteServiceImpl implements SpriteService {
                 .trim()
                 .replaceAll("\\s+", "-");
 
-        String slug = baseSlug + "-" + UUID.randomUUID().toString().substring(0, 8);
-
-        return slug;
+        return baseSlug + "-" + UUID.randomUUID().toString().substring(0, 8);
     }
 }
