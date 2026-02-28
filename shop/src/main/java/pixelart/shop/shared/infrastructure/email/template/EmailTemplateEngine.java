@@ -20,108 +20,110 @@ public class EmailTemplateEngine {
 
     private String buildOtpRegistration(Map<String, Object> data) {
         String otp = (String) data.get("otp");
-        return """
-                Hello!
 
-                You have requested to register an account at Pixel Art Shop.
+        String body = EmailLayout.h1("Verify Your Identity") +
+                EmailLayout.subtitle("✦ Registration Cipher ✦") +
+                EmailLayout.p("An adventurer seeks to join the realm. Use the cipher below to complete your registration.") +
+                EmailLayout.otpBox(otp) +
+                EmailLayout.warningBox("Do not share this cipher with anyone. Pixelism will never ask for it.") +
+                EmailLayout.p("If you did not make this request, you may safely ignore this message.");
 
-                🔐 Your OTP code is: %s
-
-                ⏰ This code is valid for 5 minutes.
-                ⚠️ Please do not share this code with anyone.
-
-                If you did not make this request, please ignore this email.
-
-                Best regards,
-                Pixel Art Shop Team 🎮
-                """.formatted(otp);
+        return EmailLayout.wrap("Verify Your Account — Pixelism", body);
     }
 
     private String buildOtpResetPassword(Map<String, Object> data) {
         String otp = (String) data.get("otp");
-        return """
-                Hello!
 
-                You have requested to reset your password at Pixel Art Shop.
+        String body = EmailLayout.h1("Reforge Your Oath") +
+                EmailLayout.subtitle("✦ Password Reset Cipher ✦") +
+                EmailLayout.p("A request to reforge the binding oath for your account has been received.") +
+                EmailLayout.otpBox(otp) +
+                EmailLayout.warningBox("If you did not request this, your account may be at risk. Change your password immediately or contact support.") +
+                EmailLayout.p("This cipher expires in 5 minutes. Do not share it with anyone.");
 
-                🔑 Your OTP verification code is: %s
-
-                ⏰ This code is valid for 5 minutes.
-                ⚠️ If you did not request a password reset, your account may be at risk.
-                     Please change your password immediately or contact support.
-
-                Best regards,
-                Pixel Art Shop Team 🎮
-                """.formatted(otp);
+        return EmailLayout.wrap("Reset Your Password — Pixelism", body);
     }
 
     private String buildWelcome(Map<String, Object> data) {
         String username = (String) data.get("username");
-        return """
-                Hello %s! 🎉
 
-                Welcome to Pixel Art Shop — the home of beautiful pixel art sprites!
+        String featureRows =
+                "<table cellpadding=\"0\" cellspacing=\"0\" style=\"margin:20px 0;\">" +
+                        EmailLayout.badge("⚔", "Browse curated sprite collections across the realm") +
+                        EmailLayout.badge("💎", "Purchase and claim your favourite pixel relics") +
+                        EmailLayout.badge("✦", "Leave inscriptions and support fellow artisans") +
+                        "</table>";
 
-                Your account has been successfully created.
+        String body = EmailLayout.h1("Welcome, " + username + "!") +
+                EmailLayout.subtitle("✦ Your Legend Begins ✦") +
+                EmailLayout.p("Your account has been forged and bound to the realm of Pixelism. The gates are open.") +
+                EmailLayout.divider() +
+                "<p style=\"margin:0 0 12px;font-size:12px;color:#525252;text-transform:uppercase;letter-spacing:2px;\">What awaits you</p>" +
+                featureRows +
+                EmailLayout.divider() +
+                EmailLayout.p("Should you need guidance, the scribes are always available. May your pixels be sharp and your sprites legendary.");
 
-                You can now start exploring:
-                  🎮 Browse sprite collections
-                  🛒 Purchase and download your favorite sprites
-                  ⭐ Leave ratings and reviews
-
-                If you need any assistance, feel free to contact us anytime.
-
-                Have fun!
-                Pixel Art Shop Team 🎮
-                """.formatted(username);
+        return EmailLayout.wrap("Welcome to the Realm — Pixelism", body);
     }
 
     private String buildOrderConfirmation(Map<String, Object> data) {
         String orderId  = (String) data.get("orderId");
         String username = (String) data.get("username");
-        return """
-                Hello %s!
 
-                ✅ Your order #%s has been successfully confirmed.
+        String orderRows =
+                "<table width=\"100%%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin:20px 0;\">" +
+                        EmailLayout.infoRow("Adventurer", username) +
+                        EmailLayout.infoRow("Order ID", "#" + orderId) +
+                        EmailLayout.infoRow("Status", "✅ Confirmed") +
+                        "</table>";
 
-                Thank you for shopping at Pixel Art Shop.
-                You can download your sprites in the "My Orders" section.
+        String body = EmailLayout.h1("Order Confirmed") +
+                EmailLayout.subtitle("✦ Relics Secured ✦") +
+                EmailLayout.p("Your relics have been claimed and are ready for download. The realm acknowledges your acquisition.") +
+                orderRows +
+                EmailLayout.p("Head to <strong style=\"color:#ffffff;\">My Orders</strong> in the Sanctum to download your sprites.");
 
-                Best regards,
-                Pixel Art Shop Team 🎮
-                """.formatted(username, orderId);
+        return EmailLayout.wrap("Order Confirmed — Pixelism", body);
     }
 
     private String buildOrderCompleted(Map<String, Object> data) {
         String orderId  = (String) data.get("orderId");
         String username = (String) data.get("username");
-        return """
-                Hello %s!
 
-                📦 Your order #%s has been completed.
+        String orderRows =
+                "<table width=\"100%%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin:20px 0;\">" +
+                        EmailLayout.infoRow("Adventurer", username) +
+                        EmailLayout.infoRow("Order ID", "#" + orderId) +
+                        EmailLayout.infoRow("Status", "📦 Completed") +
+                        "</table>";
 
-                Thank you for trusting Pixel Art Shop.
-                Please consider leaving a review to support the community!
+        String body = EmailLayout.h1("Quest Complete") +
+                EmailLayout.subtitle("✦ The Relics Are Yours ✦") +
+                EmailLayout.p("Your order has been fulfilled. The pixel relics now belong to your collection, adventurer.") +
+                orderRows +
+                EmailLayout.divider() +
+                EmailLayout.p("Consider leaving an inscription to support the artisans of the realm. Every review strengthens the community.");
 
-                Best regards,
-                Pixel Art Shop Team 🎮
-                """.formatted(username, orderId);
+        return EmailLayout.wrap("Order Completed — Pixelism", body);
     }
 
     private String buildAdminNewUser(Map<String, Object> data) {
-        String email    = (String) data.getOrDefault("email", "N/A");
+        String email    = (String) data.getOrDefault("email",    "N/A");
         String username = (String) data.getOrDefault("username", "N/A");
         String provider = (String) data.getOrDefault("provider", "LOCAL");
-        return """
-                [System Notification]
 
-                👤 A new user has just registered:
+        String rows =
+                "<table width=\"100%%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin:20px 0;\">" +
+                        EmailLayout.infoRow("Email",    email)    +
+                        EmailLayout.infoRow("Username", username) +
+                        EmailLayout.infoRow("Provider", provider) +
+                        "</table>";
 
-                Email:    %s
-                Username: %s
-                Provider: %s
+        String body = EmailLayout.h1("New Adventurer Joined") +
+                EmailLayout.subtitle("✦ System Notification ✦") +
+                EmailLayout.p("A new soul has crossed the threshold and joined the realm.") +
+                rows;
 
-                Pixel Art Shop System
-                """.formatted(email, username, provider);
+        return EmailLayout.wrap("[Admin] New User — Pixelism", body);
     }
 }
