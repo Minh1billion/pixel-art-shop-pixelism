@@ -8,7 +8,7 @@ import org.springframework.data.domain.PageRequest;
 
 import java.util.List;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonIgnoreProperties(ignoreUnknown = true, value = {"pageable"})
 public class RestPage<T> extends PageImpl<T> {
 
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
@@ -18,10 +18,6 @@ public class RestPage<T> extends PageImpl<T> {
             @JsonProperty("size") int size,
             @JsonProperty("totalElements") long totalElements
     ) {
-        super(content, PageRequest.of(number, size), totalElements);
-    }
-
-    public RestPage(PageImpl<T> page) {
-        super(page.getContent(), page.getPageable(), page.getTotalElements());
+        super(content, PageRequest.of(number > 0 ? number : 0, size > 0 ? size : 10), totalElements);
     }
 }

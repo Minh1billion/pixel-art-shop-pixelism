@@ -49,9 +49,8 @@ public class SpriteServiceImpl implements SpriteService {
     public Page<SpriteListResponse> getAll(SpriteFilterRequest filter, int page, int size) {
         Pageable pageable = buildPageable(filter, page, size);
         Specification<Sprite> spec = SpriteSpecification.filter(filter.categoryIds(), filter.keyword(), null);
-        return new RestPage<>(
-                (PageImpl<SpriteListResponse>) spriteRepository.findAll(spec, pageable).map(SpriteListResponse::from)
-        );
+        Page<SpriteListResponse> result = spriteRepository.findAll(spec, pageable).map(SpriteListResponse::from);
+        return new RestPage<>(result.getContent(), result.getNumber(), result.getSize(), result.getTotalElements());
     }
 
     @Override
