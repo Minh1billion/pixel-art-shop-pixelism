@@ -1,6 +1,7 @@
 import { api } from "@/lib/axios";
 import type { AssetPackFilterRequest, AssetPackResponse } from "@/features/assetpack/types";
 import type { ApiResponse, PageResponse } from "@/features/shared/components/types";
+import { normalizePage } from "@/features/shared/utils/page.utils";
 
 export class AssetPackService {
     static async getAll(
@@ -14,7 +15,7 @@ export class AssetPackService {
                 { params: { ...filter, page, size } }
             );
             if (!response.data.success) throw new Error(response.data.message);
-            return response.data.data;
+            return normalizePage(response.data.data);
         } catch (error: any) {
             throw new Error(error.response?.data?.message ?? error.message);
         }

@@ -6,19 +6,7 @@ import type {
     SpriteListResponse,
 } from "@/features/sprite/types";
 import type { ApiResponse, PageResponse } from "@/features/shared/components/types";
-
-function normalizePage<T>(data: PageResponse<T>): PageResponse<T> {
-    if (data.page) {
-        return {
-            ...data,
-            number: data.page.number,
-            size: data.page.size,
-            totalElements: data.page.totalElements,
-            totalPages: data.page.totalPages,
-        };
-    }
-    return data;
-}
+import { normalizePage } from "@/features/shared/utils/page.utils";
 
 export class SpriteService {
     static async getSprites(
